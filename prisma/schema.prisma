@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(255)
+  name      String   @db.VarChar(100)
+  role      Role     @default(KASIR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+  attendances  Attendance[]
+  salaries     Salary[]
+  logs         Log[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  KASIR
+}
+
+model Menu {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  price       Int
+  image       String?  @db.LongText
+  isAvailable Boolean  @default(true)
+  category    String   @default("Makanan") @db.VarChar(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  menuIngredients    MenuIngredient[]
+  transactionDetails TransactionDetail[]
+
+  @@map("menus")
+}
+
+model Ingredient {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  unit      String   @db.VarChar(20)
+  stock     Float    @default(0)
+  minStock  Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  menuIngredients MenuIngredient[]
+
+  @@map("ingredients")
+}
+
+model MenuIngredient {
+  id           Int   @id @default(autoincrement())
+  menuId       Int
+  ingredientId Int
+  quantity     Float
+
+  menu       Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@unique([menuId, ingredientId])
+  @@map("menu_ingredients")
+}
+
+model Transaction {
+  id            Int               @id @default(autoincrement())
+  orderNumber   String?           @unique @db.VarChar(30)
+  userId        Int
+  totalPrice    Int
+  discount      Int               @default(0)
+  finalPrice    Int
+  amountPaid    Int               @default(0)
+  paymentMethod String            @default("Cash") @db.VarChar(30)
+  status        TransactionStatus @default(COMPLETED)
+  createdAt     DateTime          @default(now())
+
+  user    User                @relation(fields: [userId], references: [id])
+  details TransactionDetail[]
+
+  @@map("transactions")
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model TransactionDetail {
+  id            Int @id @default(autoincrement())
+  transactionId Int
+  menuId        Int
+  quantity      Int
+  subtotal      Int
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  menu        Menu        @relation(fields: [menuId], references: [id])
+
+  @@map("transaction_details")
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  category    String   @db.VarChar(50)
+  description String   @db.VarChar(255)
+  amount      Int
+  date        DateTime @db.Date
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("expenses")
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  photo     String?  @db.LongText
+  latitude  Float?
+  longitude Float?
+  purpose   String?  @default("Shift 1") @db.VarChar(30)
+  date      DateTime @db.Date
+  clockIn   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+  @@map("attendance")
+}
+
+model Salary {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  period      String   @db.VarChar(20)
+  totalDays   Int
+  dailyRate   Int
+  totalSalary Int
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("salary")
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String   @db.VarChar(50)
+  detail    String   @db.Text
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("logs")
+}
