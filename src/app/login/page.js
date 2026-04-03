@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image'
 import { useRouter } from 'next/navigation';
 
 const EyeIcon = () => (
@@ -161,14 +160,11 @@ export default function LoginPage() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-brand">
-          <div className="login-brand-icon">
-            <Image
-              src="/assets/logo.png"
-              alt="CaptGrill"
-              width={64}
-              height={64}
-            />
-          </div>
+          <img 
+            src="/assets/logo.png"
+            alt="test"
+            style={{ width: '190px', height: '100px'}}
+          />
           <h1>CaptGrill</h1>
           <p>Sistem Manajemen Penjualan</p>
         </div>

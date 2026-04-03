@@ -6,9 +6,9 @@
   --primary-light: #2d8a32;
   --primary-dark: #1a5a1e;
   --primary-glow: rgba(35, 114, 39, 0.15);
-  --accent: #FFAA00;
-  --accent-light: #FFC233;
-  --accent-dark: #E69900;
+  --accent: #fbd953;
+  --accent-light: #fbd953;
+  --accent-dark: #fbd953;
 
   /* Neutral */
   --bg-primary: #f8fafc;
@@ -30,7 +30,7 @@
   /* Status */
   --success: #22c55e;
   --success-bg: #f0fdf4;
-  --warning: #FFAA00;
+  --warning: #fbd953;
   --warning-bg: #fffbeb;
   --danger: #ef4444;
   --danger-bg: #fef2f2;
@@ -238,7 +238,7 @@ body {
 
 .sidebar-link.active {
   color: #000;
-  background: #FFAA00;
+  background: #fbd953;
   box-shadow: 0 4px 12px rgba(255, 170, 0, 0.3);
 }
 
@@ -895,7 +895,7 @@ tbody tr:last-child td {
 }
 
 .login-card {
-  background: #FFAA00;
+  background: #fbd953;
   backdrop-filter: blur(20px);
   border: none;
   border-radius: var(--radius-xl);
@@ -1332,7 +1332,7 @@ tbody tr:last-child td {
 }
 
 .bt-dot-connecting {
-  background: #f59e0b;
+  background: #fbd953;
   animation: btPulse 0.8s ease-in-out infinite;
 }
 

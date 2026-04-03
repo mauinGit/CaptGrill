@@ -69,7 +69,7 @@ export async function POST(request) {
     const storeLon = parseFloat(process.env.STORE_LONGITUDE || '106.8');
     const maxDist = parseFloat(process.env.MAX_ATTENDANCE_DISTANCE || '500');
 
-    if (latitude && longitude) {
+    if (typeof latitude === 'number' && typeof longitude === 'number') {
       const R = 6371e3;
       const toRad = (x) => (x * Math.PI) / 180;
       const dLat = toRad(latitude - storeLat);

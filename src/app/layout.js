@@ -1,8 +1,10 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'CaptGrill - Sistem Manajemen Penjualan',
-  description: 'Sistem Informasi Manajemen Penjualan CaptGrill - Kebab, Burger & Drinks',
+  title: "CaptGrill",
+  icons: {
+    icon: "/assets/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {

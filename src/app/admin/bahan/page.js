@@ -163,9 +163,7 @@ export default function BahanPage() {
                   <option value="">Pilih satuan</option>
                   <option value="pcs">Pcs</option>
                   <option value="gram">Gram</option>
-                  <option value="kg">Kg</option>
-                  <option value="ml">Ml</option>
-                  <option value="liter">Liter</option>
+                  <option value="ml">mL</option>
                 </select>
               </div>
               <div className="form-group">

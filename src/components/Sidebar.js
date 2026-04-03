@@ -208,7 +208,7 @@ export default function Sidebar({ role, userName }) {
           <button
             onClick={handleLogout}
             className="btn btn-secondary w-full"
-            style={{ fontSize: '13px', padding: '8px', background: 'rgb(255, 170, 0)', border: '1px solid rgba(255,255,255,0.1)', color: '#000000ff' }}
+            style={{ fontSize: '13px', padding: '8px', background: '#fbd953', border: '1px solid rgba(255,255,255,0.1)', color: '#000000ff' }}
           >
             🚪 Logout
           </button>
