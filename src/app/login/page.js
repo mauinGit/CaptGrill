@@ -134,8 +134,8 @@ export default function LoginPage() {
         <div className="login-brand">
           <img 
             src="/assets/logo.png"
-            alt="test"
-            style={{ width: '190px', height: '100px'}}
+            alt="logo"
+            style={{ width: '160px', height: '90px'}}
           />
           <h1>CaptGrill</h1>
           <p>Sistem Manajemen Penjualan</p>

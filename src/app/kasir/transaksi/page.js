@@ -50,7 +50,8 @@ export default function TransaksiPage() {
   };
 
   const totalPrice = cart.reduce((sum, c) => sum + c.price * c.quantity, 0);
-  const finalPrice = totalPrice - discount;
+  const clampedDiscount = Math.min(discount, totalPrice);
+  const finalPrice = totalPrice - clampedDiscount;
   const paidAmount = parseInt(amountPaid) || 0;
   const change = paidAmount - finalPrice;
 
@@ -70,7 +71,7 @@ export default function TransaksiPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: cart.map((c) => ({ menuId: c.menuId, quantity: c.quantity })),
-          discount,
+          discount: clampedDiscount,
           amountPaid: paidAmount || finalPrice,
           paymentMethod,
         }),
@@ -86,7 +87,7 @@ export default function TransaksiPage() {
             await bt.printReceipt({
               orderNumber: result.orderNumber,
               items: cart,
-              discount,
+              discount: clampedDiscount,
               totalPrice,
               finalPrice,
               amountPaid: paidAmount || finalPrice,
@@ -224,7 +225,14 @@ export default function TransaksiPage() {
             <div className="pos-cart-footer">
               <div style={{ marginBottom: '8px' }}>
                 <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Diskon (Rp)</label>
-                <input type="number" className="form-input" value={discount} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)} style={{ marginTop: '4px', padding: '6px 10px', fontSize: '13px' }} />
+                <input type="number" className="form-input" value={discount || ''} onChange={(e) => {
+                  const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                  const val = parseInt(raw) || 0;
+                  setDiscount(val);
+                }} min="0" style={{ marginTop: '4px', padding: '6px 10px', fontSize: '13px' }} />
+                {discount > totalPrice && (
+                  <small style={{ color: 'var(--danger)', fontSize: '11px' }}>⚠️ Diskon melebihi total, akan di-cap ke {formatCurrency(totalPrice)}</small>
+                )}
               </div>
               <div className="pos-cart-total">
                 <span>Subtotal</span>

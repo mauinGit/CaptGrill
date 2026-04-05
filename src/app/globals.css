@@ -664,6 +664,23 @@ tbody tr:last-child td {
   max-width: 700px;
 }
 
+/* Mobile modal fix — always centered and visible */
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: flex-start;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .modal {
+    margin: auto;
+    max-height: none;
+    max-width: 100%;
+  }
+  .modal-lg {
+    max-width: 100%;
+  }
+}
+
 .modal-header {
   display: flex;
   align-items: center;
