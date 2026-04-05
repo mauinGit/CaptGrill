@@ -67,21 +67,35 @@ export async function POST(request) {
     // Validate GPS distance
     const storeLat = parseFloat(process.env.STORE_LATITUDE || '-6.2');
     const storeLon = parseFloat(process.env.STORE_LONGITUDE || '106.8');
-    const maxDist = parseFloat(process.env.MAX_ATTENDANCE_DISTANCE || '500');
+    const maxDist = parseFloat(process.env.MAX_ATTENDANCE_DISTANCE || '10');
 
-    if (typeof latitude === 'number' && typeof longitude === 'number') {
+    console.log("MASUK API");
+    console.log("MAX DIST:", maxDist);
+
+    // 🔥 TAMBAHKAN INI
+    const userLat = parseFloat(latitude);
+    const userLng = parseFloat(longitude);
+
+    if (!isNaN(userLat) && !isNaN(userLng)) {
       const R = 6371e3;
       const toRad = (x) => (x * Math.PI) / 180;
-      const dLat = toRad(latitude - storeLat);
-      const dLon = toRad(longitude - storeLon);
+
+      const dLat = toRad(userLat - storeLat);
+      const dLon = toRad(userLng - storeLon);
+
       const a =
         Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(storeLat)) * Math.cos(toRad(latitude)) * Math.sin(dLon / 2) ** 2;
+        Math.cos(toRad(storeLat)) *
+          Math.cos(toRad(userLat)) *
+          Math.sin(dLon / 2) ** 2;
+
       const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      console.log("DISTANCE:", distance);
 
       if (distance > maxDist) {
         return apiError(
-          `Lokasi Anda terlalu jauh dari toko (${Math.round(distance)}m, maks ${maxDist}m)`,
+          `Lokasi Anda terlalu jauh (${Math.round(distance)}m, maks ${maxDist}m)`,
           400
         );
       }

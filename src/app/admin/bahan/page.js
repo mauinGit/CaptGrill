@@ -66,6 +66,21 @@ export default function BahanPage() {
     }
   };
 
+  const handleCopyNotes = () => {
+    if (ingredients.length === 0) {
+      toast.error('Tidak ada data bahan untuk disalin');
+      return;
+    }
+    const text = ingredients
+      .map((item, i) => `${i + 1}.${item.name}: ${item.stock} (${item.unit})`)
+      .join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success('Catatan bahan berhasil disalin!');
+    }).catch(() => {
+      toast.error('Gagal menyalin catatan');
+    });
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="navbar">
@@ -90,6 +105,7 @@ export default function BahanPage() {
           </div>
         </div>
         <div className="toolbar-right">
+          <button className="btn btn-secondary" onClick={handleCopyNotes}>📋 Salin Catatan</button>
           <button className="btn btn-primary" onClick={openAdd}>➕ Tambah Bahan</button>
         </div>
       </div>

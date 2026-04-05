@@ -65,10 +65,20 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
+    const menuId = parseInt(id);
 
-    const menu = await prisma.menu.delete({
-      where: { id: parseInt(id) },
-    });
+    // Get menu name before deleting
+    const menuData = await prisma.menu.findUnique({ where: { id: menuId } });
+    if (!menuData) {
+      return apiError('Menu tidak ditemukan', 404);
+    }
+
+    // Delete in transaction: related records first, then the menu
+    await prisma.$transaction([
+      prisma.transactionDetail.deleteMany({ where: { menuId } }),
+      prisma.menuIngredient.deleteMany({ where: { menuId } }),
+      prisma.menu.delete({ where: { id: menuId } }),
+    ]);
 
     const userId = request.headers.get('x-user-id');
     if (userId) {
@@ -76,7 +86,7 @@ export async function DELETE(request, { params }) {
         data: {
           userId: parseInt(userId),
           action: 'DELETE_MENU',
-          detail: `Menghapus menu: ${menu.name}`,
+          detail: `Menghapus menu: ${menuData.name}`,
         },
       });
     }

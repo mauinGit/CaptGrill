@@ -57,7 +57,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
 
-  // View mode: 'login' | 'change' | 'forgot'
+  // View mode: 'login' | 'change'
   const [mode, setMode] = useState('login');
 
   // Change password state
@@ -68,21 +68,14 @@ export default function LoginPage() {
   const [cpShowOld, setCpShowOld] = useState(false);
   const [cpShowNew, setCpShowNew] = useState(false);
 
-  // Forgot password state
-  const [fpUsername, setFpUsername] = useState('');
-  const [fpAdminPassword, setFpAdminPassword] = useState('');
-  const [fpNewPassword, setFpNewPassword] = useState('');
-  const [fpConfirmPassword, setFpConfirmPassword] = useState('');
-  const [fpShowAdmin, setFpShowAdmin] = useState(false);
-  const [fpShowNew, setFpShowNew] = useState(false);
+
 
   const resetAll = () => {
     setError('');
     setSuccess('');
     setLoading(false);
     setCpUsername(''); setCpOldPassword(''); setCpNewPassword(''); setCpConfirmPassword('');
-    setFpUsername(''); setFpAdminPassword(''); setFpNewPassword(''); setFpConfirmPassword('');
-    setCpShowOld(false); setCpShowNew(false); setFpShowAdmin(false); setFpShowNew(false);
+    setCpShowOld(false); setCpShowNew(false);
   };
 
   const switchMode = (newMode) => {
@@ -133,28 +126,7 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  // Forgot Password
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    setError(''); setSuccess('');
-    if (fpNewPassword !== fpConfirmPassword) { setError('Konfirmasi password tidak cocok'); return; }
-    if (fpNewPassword.length < 4) { setError('Password baru minimal 4 karakter'); return; }
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: fpUsername, adminPassword: fpAdminPassword, newPassword: fpNewPassword }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Gagal mereset password'); setLoading(false); return; }
-      setSuccess('Password berhasil direset! Silakan login dengan password baru.');
-      setTimeout(() => switchMode('login'), 2500);
-    } catch {
-      setError('Terjadi kesalahan server');
-    }
-    setLoading(false);
-  };
+
 
   return (
     <div className="login-container">
@@ -214,7 +186,7 @@ export default function LoginPage() {
               {loading ? '⏳ Memproses...' : '🔓 Masuk'}
             </button>
 
-            <div style={{ marginTop: '16px', textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center' }}>
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
               <button
                 type="button"
                 onClick={() => switchMode('change')}
@@ -225,17 +197,6 @@ export default function LoginPage() {
                 }}
               >
                 🔑 Ganti Password
-              </button>
-              <button
-                type="button"
-                onClick={() => switchMode('forgot')}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: '#237227', fontSize: '13px', fontWeight: '600',
-                  textDecoration: 'underline', padding: 0,
-                }}
-              >
-                ❓ Lupa Password
               </button>
             </div>
           </form>
@@ -275,42 +236,7 @@ export default function LoginPage() {
           </form>
         )}
 
-        {/* FORGOT PASSWORD FORM */}
-        {mode === 'forgot' && (
-          <form onSubmit={handleForgotPassword}>
-            <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(35, 114, 39, 0.08)', borderRadius: '8px', fontSize: '12px', color: '#555', lineHeight: '1.5' }}>
-              <strong>❓ Lupa Password</strong><br/>
-              Hubungi admin untuk otorisasi. Admin akan memasukkan password admin, lalu Anda bisa set password baru.
-            </div>
-            <div className="form-group">
-              <label className="form-label">Username Anda</label>
-              <input type="text" className="form-input" placeholder="Username yang lupa password" value={fpUsername} onChange={(e) => setFpUsername(e.target.value)} required autoFocus />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Password Admin (untuk otorisasi)</label>
-              <PasswordInput value={fpAdminPassword} onChange={(e) => setFpAdminPassword(e.target.value)} placeholder="Admin masukkan password" showPassword={fpShowAdmin} onToggle={() => setFpShowAdmin(!fpShowAdmin)} />
-            </div>
-            <div style={{ borderTop: '1px dashed #ccc', margin: '16px 0', paddingTop: '12px' }}>
-              <p style={{ fontSize: '12px', color: '#888', marginBottom: '12px' }}>Sekarang masukkan password baru Anda:</p>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Password Baru</label>
-              <PasswordInput value={fpNewPassword} onChange={(e) => setFpNewPassword(e.target.value)} placeholder="Password baru (min 4 karakter)" showPassword={fpShowNew} onToggle={() => setFpShowNew(!fpShowNew)} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Konfirmasi Password Baru</label>
-              <PasswordInput value={fpConfirmPassword} onChange={(e) => setFpConfirmPassword(e.target.value)} placeholder="Ulangi password baru" showPassword={fpShowNew} onToggle={() => setFpShowNew(!fpShowNew)} />
-            </div>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? '⏳ Memproses...' : '✅ Reset Password'}
-            </button>
-            <div style={{ marginTop: '12px', textAlign: 'center' }}>
-              <button type="button" onClick={() => switchMode('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#237227', fontSize: '13px', fontWeight: '600', textDecoration: 'underline' }}>
-                ← Kembali ke Login
-              </button>
-            </div>
-          </form>
-        )}
+
       </div>
     </div>
   );

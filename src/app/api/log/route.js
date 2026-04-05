@@ -3,6 +3,15 @@ import { apiResponse, apiError } from '@/lib/utils';
 
 export async function GET(request) {
   try {
+    // Auto-cleanup: delete logs older than 3 days
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    await prisma.log.deleteMany({
+      where: {
+        createdAt: { lt: threeDaysAgo },
+      },
+    });
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit')) || 100;
     const from = searchParams.get('from');

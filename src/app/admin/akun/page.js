@@ -59,24 +59,7 @@ export default function AkunPage() {
     if (res.ok) { toast.success('Akun berhasil dihapus'); fetchData(); } else toast.error('Gagal menghapus');
   };
 
-  const handleResetPassword = async (user) => {
-    const newPassword = prompt(`Reset password untuk ${user.name}?\nMasukkan password baru:`);
-    if (!newPassword) return;
-    if (newPassword.length < 4) {
-      toast.error('Password minimal 4 karakter');
-      return;
-    }
-    const res = await fetch(`/api/users/${user.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: newPassword }),
-    });
-    if (res.ok) {
-      toast.success(`Password ${user.name} berhasil direset`);
-    } else {
-      toast.error('Gagal mereset password');
-    }
-  };
+
 
   return (
     <div className="animate-fade-in">
@@ -111,7 +94,6 @@ export default function AkunPage() {
                     <td>
                       <div className="btn-group">
                         <button className="btn btn-secondary btn-sm" onClick={() => openEdit(u)}>✏️</button>
-                        <button className="btn btn-warning btn-sm" onClick={() => handleResetPassword(u)} title="Reset Password">🔑</button>
                         {u.role !== 'ADMIN' && (
                           <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>🗑️</button>
                         )}
