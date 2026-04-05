@@ -138,13 +138,19 @@ model Attendance {
 }
 
 model Salary {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  period      String   @db.VarChar(20)
-  totalDays   Int
-  dailyRate   Int
-  totalSalary Int
-  createdAt   DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  period        String   @db.VarChar(20)
+  totalDays     Int
+  dailyRate     Int
+  totalSalary   Int
+  shiftDays     Int      @default(0)
+  shiftRate     Int      @default(0)
+  gajiShift     Int      @default(0)
+  produksiDays  Int      @default(0)
+  produksiRate  Int      @default(0)
+  gajiProduksi  Int      @default(0)
+  createdAt     DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 

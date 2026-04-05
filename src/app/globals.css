@@ -667,15 +667,18 @@ tbody tr:last-child td {
 /* Mobile modal fix — always centered and visible */
 @media (max-width: 768px) {
   .modal-overlay {
-    align-items: flex-start;
+    align-items: center; /* FIX utama */
+    justify-content: center;
     padding: 16px;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh; /* tetap batasi tinggi */
     overflow-y: auto;
   }
-  .modal {
-    margin: auto;
-    max-height: none;
-    max-width: 100%;
-  }
+
   .modal-lg {
     max-width: 100%;
   }

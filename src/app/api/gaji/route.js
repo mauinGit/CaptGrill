@@ -25,14 +25,21 @@ export async function GET(request) {
   }
 }
 
-// Calculate & create salary
+// Calculate & create salary with 2 components: Shift + Produksi Bahan
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { userId, period, dailyRate } = body;
+    const { userId, period, shiftRate, produksiRate } = body;
 
-    if (!userId || !period || !dailyRate) {
-      return apiError('userId, period, dan dailyRate harus diisi', 400);
+    if (!userId || !period) {
+      return apiError('userId dan period harus diisi', 400);
+    }
+
+    const parsedShiftRate = parseInt(shiftRate) || 0;
+    const parsedProduksiRate = parseInt(produksiRate) || 0;
+
+    if (parsedShiftRate === 0 && parsedProduksiRate === 0) {
+      return apiError('Minimal satu rate gaji harus diisi', 400);
     }
 
     // Parse period (format: "2024-01")
@@ -40,26 +47,52 @@ export async function POST(request) {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
 
-    // Count attendance days
-    const attendanceCount = await prisma.attendance.count({
+    const dateFilter = {
+      userId: parseInt(userId),
+      date: { gte: startDate, lte: endDate },
+    };
+
+    // Count shift attendance (Shift 1 + Shift 2)
+    const shiftDays = await prisma.attendance.count({
       where: {
-        userId: parseInt(userId),
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
+        ...dateFilter,
+        OR: [
+          { purpose: 'Shift 1' },
+          { purpose: 'Shift 2' },
+          { purpose: null },
+        ],
       },
     });
 
-    const totalSalary = attendanceCount * parseInt(dailyRate);
+    // Count production attendance (Membuat Bahan)
+    const produksiDays = await prisma.attendance.count({
+      where: {
+        ...dateFilter,
+        purpose: 'Membuat Bahan',
+      },
+    });
+
+    const gajiShift = shiftDays * parsedShiftRate;
+    const gajiProduksi = produksiDays * parsedProduksiRate;
+    const totalSalary = gajiShift + gajiProduksi;
+    const totalDays = shiftDays + produksiDays;
+
+    // Use shiftRate as dailyRate for backward compatibility
+    const dailyRate = parsedShiftRate || parsedProduksiRate;
 
     const salary = await prisma.salary.create({
       data: {
         userId: parseInt(userId),
         period,
-        totalDays: attendanceCount,
-        dailyRate: parseInt(dailyRate),
+        totalDays,
+        dailyRate,
         totalSalary,
+        shiftDays,
+        shiftRate: parsedShiftRate,
+        gajiShift,
+        produksiDays,
+        produksiRate: parsedProduksiRate,
+        gajiProduksi,
       },
       include: {
         user: { select: { name: true } },
@@ -72,7 +105,7 @@ export async function POST(request) {
         data: {
           userId: parseInt(reqUserId),
           action: 'CREATE_SALARY',
-          detail: `Menghitung gaji ${salary.user.name} periode ${period}: Rp${totalSalary}`,
+          detail: `Menghitung gaji ${salary.user.name} periode ${period}: Shift=${shiftDays}x${parsedShiftRate}, Produksi=${produksiDays}x${parsedProduksiRate}, Total=Rp${totalSalary}`,
         },
       });
     }

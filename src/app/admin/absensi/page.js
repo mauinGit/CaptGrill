@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { formatDate, formatDateTime } from '@/lib/utils';
+import { useToast } from '@/components/Toast';
 
 export default function AbsensiAdminPage() {
+  const toast = useToast();
   const [attendances, setAttendances] = useState([]);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -23,6 +25,21 @@ export default function AbsensiAdminPage() {
   };
 
   useEffect(() => { fetchData(); }, [from, to]);
+
+  const handleDelete = async (attendance) => {
+    const userName = attendance.user?.name || 'Karyawan';
+    const dateStr = formatDate(attendance.date);
+    if (!confirm(`Yakin ingin menghapus data absensi ${userName} tanggal ${dateStr}?\n\nPastikan sudah ada konfirmasi dari karyawan terkait.`)) return;
+
+    const res = await fetch(`/api/absensi/${attendance.id}`, { method: 'DELETE' });
+    if (res.ok) {
+      toast.success(`Absensi ${userName} (${dateStr}) berhasil dihapus`);
+      fetchData();
+    } else {
+      const data = await res.json();
+      toast.error(data.error || 'Gagal menghapus absensi');
+    }
+  };
 
   return (
     <div className="animate-fade-in">
@@ -50,7 +67,7 @@ export default function AbsensiAdminPage() {
           <div className="table-container">
             <table>
               <thead>
-                <tr><th>No</th><th>Nama</th><th>Tanggal</th><th>Jam Masuk</th><th>Tujuan</th><th>Foto</th><th>Lokasi</th></tr>
+                <tr><th>No</th><th>Nama</th><th>Tanggal</th><th>Jam Masuk</th><th>Tujuan</th><th>Foto</th><th>Lokasi</th><th>Aksi</th></tr>
               </thead>
               <tbody>
                 {attendances.map((a, i) => (
@@ -80,6 +97,9 @@ export default function AbsensiAdminPage() {
                       ) : (
                         <span className="badge badge-warning">⚠️ N/A</span>
                       )}
+                    </td>
+                    <td>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(a)} title="Hapus absensi">🗑️</button>
                     </td>
                   </tr>
                 ))}
