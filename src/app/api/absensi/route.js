@@ -50,18 +50,21 @@ export async function POST(request) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Check if already attended today
+    const attendancePurpose = purpose || 'Shift 1';
+
+    // Check if already attended today for this purpose
     const existing = await prisma.attendance.findUnique({
       where: {
-        userId_date: {
+        userId_date_purpose: {
           userId: parseInt(userId),
           date: today,
+          purpose: attendancePurpose,
         },
       },
     });
 
     if (existing) {
-      return apiError('Anda sudah melakukan absensi hari ini', 400);
+      return apiError(`Anda sudah melakukan absensi "${attendancePurpose}" hari ini`, 400);
     }
 
     // Validate GPS distance
@@ -107,7 +110,7 @@ export async function POST(request) {
         photo: photo || null,
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
-        purpose: purpose || 'Shift 1',
+        purpose: attendancePurpose,
         date: today,
       },
       include: {

@@ -3,8 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 model User {
@@ -34,7 +33,7 @@ model Menu {
   id          Int      @id @default(autoincrement())
   name        String   @db.VarChar(100)
   price       Int
-  image       String?  @db.LongText
+  image       String?  @db.Text
   isAvailable Boolean  @default(true)
   category    String   @default("Makanan") @db.VarChar(50)
   createdAt   DateTime @default(now())
@@ -50,8 +49,8 @@ model Ingredient {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(100)
   unit      String   @db.VarChar(20)
-  stock     Float    @default(0)
-  minStock  Float    @default(0)
+  stock     Decimal    @default(0)
+  minStock  Decimal    @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -66,7 +65,7 @@ model MenuIngredient {
   id           Int   @id @default(autoincrement())
   menuId       Int
   ingredientId Int
-  quantity     Float
+  quantity     Decimal
 
   menu       Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
@@ -127,15 +126,16 @@ model Expense {
 model Attendance {
   id        Int      @id @default(autoincrement())
   userId    Int
-  photo     String?  @db.LongText
-  latitude  Float?
-  longitude Float?
+  photo     String?  @db.Text
+  latitude  Decimal?
+  longitude Decimal?
   purpose   String?  @default("Shift 1") @db.VarChar(30)
   date      DateTime @db.Date
   clockIn   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 
+  @@unique([userId, date, purpose])
   @@map("attendance")
 }
 
@@ -189,7 +189,7 @@ model RecipeComposition {
   id           Int   @id @default(autoincrement())
   recipeId     Int
   ingredientId Int
-  quantity     Float
+  quantity     Decimal
 
   recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
