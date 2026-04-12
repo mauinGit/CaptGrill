@@ -116,44 +116,44 @@ export default function AbsensiKasirPage() {
   };
 
   const getLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError('Geolocation tidak didukung browser ini');
-      return;
-    }
+  if (!navigator.geolocation) {
+    setLocationError('Geolocation tidak didukung browser ini');
+    return;
+  }
 
-    setLocationError('');
-    toast.info('Mengambil lokasi...');
-    
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocation({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        });
-        toast.success('Lokasi berhasil didapatkan!');
-      },
-      (err) => {
-        let errorMsg = '';
-        switch (err.code) {
-          case err.PERMISSION_DENIED:
-            errorMsg = 'Izin lokasi ditolak. Izinkan akses lokasi di browser.';
-            break;
-          case err.POSITION_UNAVAILABLE:
-            errorMsg = 'Lokasi tidak tersedia. Pastikan GPS aktif.';
-            break;
-          case err.TIMEOUT:
-            errorMsg = 'Waktu pengambilan lokasi habis. Coba lagi.';
-            break;
-          default:
-            errorMsg = 'Gagal mendapatkan lokasi: ' + err.message;
-        }
-        setLocationError(errorMsg);
-        toast.error(errorMsg);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
-  };
+  setLocationError('');
+  console.log('Mengambil lokasi...'); // Ganti toast.info dengan console.log
+  
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      setLocation({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      });
+      toast.success('Lokasi berhasil didapatkan!');
+    },
+    (err) => {
+      let errorMsg = '';
+      switch (err.code) {
+        case err.PERMISSION_DENIED:
+          errorMsg = 'Izin lokasi ditolak. Izinkan akses lokasi di browser.';
+          break;
+        case err.POSITION_UNAVAILABLE:
+          errorMsg = 'Lokasi tidak tersedia. Pastikan GPS aktif.';
+          break;
+        case err.TIMEOUT:
+          errorMsg = 'Waktu pengambilan lokasi habis. Coba lagi.';
+          break;
+        default:
+          errorMsg = 'Gagal mendapatkan lokasi: ' + err.message;
+      }
+      setLocationError(errorMsg);
+      toast.error(errorMsg);
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+};
 
   const handleSubmit = async () => {
     // Validasi
