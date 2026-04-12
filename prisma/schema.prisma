@@ -16,10 +16,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  transactions Transaction[]
-  attendances  Attendance[]
-  salaries     Salary[]
-  logs         Log[]
+  transactions   Transaction[]
+  attendances    Attendance[]
+  salaries       Salary[]
+  logs           Log[]
+  productionLogs ProductionLog[]
 
   @@map("users")
 }
@@ -54,7 +55,9 @@ model Ingredient {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  menuIngredients MenuIngredient[]
+  menuIngredients    MenuIngredient[]
+  recipeCompositions RecipeComposition[]
+  recipes            Recipe[]
 
   @@map("ingredients")
 }
@@ -133,7 +136,6 @@ model Attendance {
 
   user User @relation(fields: [userId], references: [id])
 
-  @@unique([userId, date])
   @@map("attendance")
 }
 
@@ -167,4 +169,45 @@ model Log {
   user User? @relation(fields: [userId], references: [id])
 
   @@map("logs")
+}
+
+model Recipe {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  ingredientId Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ingredient     Ingredient          @relation(fields: [ingredientId], references: [id])
+  compositions   RecipeComposition[]
+  productionLogs ProductionLog[]
+
+  @@map("recipes")
+}
+
+model RecipeComposition {
+  id           Int   @id @default(autoincrement())
+  recipeId     Int
+  ingredientId Int
+  quantity     Float
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, ingredientId])
+  @@map("recipe_compositions")
+}
+
+model ProductionLog {
+  id           Int      @id @default(autoincrement())
+  recipeId     Int
+  userId       Int
+  quantity     Int
+  detail       String   @db.Text
+  createdAt    DateTime @default(now())
+
+  recipe Recipe @relation(fields: [recipeId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("production_logs")
 }

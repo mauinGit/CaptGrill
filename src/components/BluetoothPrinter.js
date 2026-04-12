@@ -175,12 +175,13 @@ export function BluetoothProvider({ children }) {
     // Bold on + double size
     commands.push(new Uint8Array([ESC, 0x45, 0x01]));
     commands.push(new Uint8Array([GS, 0x21, 0x11]));
-    commands.push(encoder.encode('CaptGrill\n'));
+    commands.push(encoder.encode('CAPT. GRILL\n'));
     commands.push(new Uint8Array([GS, 0x21, 0x00]));
     commands.push(new Uint8Array([ESC, 0x45, 0x00]));
 
     // Subtitle
-    commands.push(encoder.encode('Jl. Nusantara Gg. Buntu, Timbangan, Kecamatan Indralaya Utara, Kabupaten Ogan Ilir, Sumatera Selatan 30862\n'));
+    commands.push(encoder.encode('Jl. Nusantara Gg. Buntu, Timbangan Indralaya Utara, Ogan Ilir, Sumsel\n'));
+    commands.push(encoder.encode('#PERFECTin1BITE\n'));
     commands.push(encoder.encode('================================\n'));
 
     // Left align
@@ -241,9 +242,9 @@ export function BluetoothProvider({ children }) {
 
     // Center
     commands.push(new Uint8Array([ESC, 0x61, 0x01]));
-    commands.push(encoder.encode('\nTerima kasih sudah berkunjung!\n'));
-    commands.push(encoder.encode('Selamat menikmati CaptGrill!\n'));
-    commands.push(encoder.encode('Follow IG: @captgrill.id\n'));
+    commands.push(encoder.encode('\nTerimakasih Capt!\n'));
+    commands.push(encoder.encode('Semoga harimu menyenangkan :)\n'));
+    commands.push(encoder.encode('Follow IG/TT: @captgrill\n'));
     commands.push(encoder.encode('================================\n'));
     commands.push(encoder.encode('Powered by Mahasiswa Sistem Informasi Unsri\n'));
 

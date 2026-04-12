@@ -15,6 +15,7 @@ try {
 const adminLinks = [
   { href: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
   { href: '/admin/bahan', icon: '🧂', label: 'Manajemen Bahan' },
+  { href: '/admin/pembuatan-bahan', icon: '🧪', label: 'Pembuatan Bahan' },
   { href: '/admin/menu', icon: '🍔', label: 'Manajemen Menu' },
   { href: '/admin/pengeluaran', icon: '💸', label: 'Pengeluaran' },
   { href: '/admin/laporan', icon: '📋', label: 'Laporan' },
@@ -27,6 +28,7 @@ const adminLinks = [
 
 const kasirLinks = [
   { href: '/kasir/transaksi', icon: '🛒', label: 'Transaksi' },
+  { href: '/kasir/bahan', icon: '🧪', label: 'Bahan' },
   { href: '/kasir/riwayat', icon: '📜', label: 'Riwayat Hari Ini' },
   { href: '/kasir/absensi', icon: '📅', label: 'Absensi' },
 ];

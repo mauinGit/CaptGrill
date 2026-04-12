@@ -35,6 +35,17 @@ export async function POST(request) {
       return apiError('userId dan period harus diisi', 400);
     }
 
+    const parsedUserId = parseInt(userId);
+    if (isNaN(parsedUserId)) {
+      return apiError('userId tidak valid', 400);
+    }
+
+    // Validate user exists
+    const userExists = await prisma.user.findUnique({ where: { id: parsedUserId } });
+    if (!userExists) {
+      return apiError('Karyawan tidak ditemukan', 404);
+    }
+
     const parsedShiftRate = parseInt(shiftRate) || 0;
     const parsedProduksiRate = parseInt(produksiRate) || 0;
 
@@ -44,11 +55,14 @@ export async function POST(request) {
 
     // Parse period (format: "2024-01")
     const [year, month] = period.split('-').map(Number);
+    if (!year || !month) {
+      return apiError('Format periode tidak valid (gunakan YYYY-MM)', 400);
+    }
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
 
     const dateFilter = {
-      userId: parseInt(userId),
+      userId: parsedUserId,
       date: { gte: startDate, lte: endDate },
     };
 
@@ -82,7 +96,7 @@ export async function POST(request) {
 
     const salary = await prisma.salary.create({
       data: {
-        userId: parseInt(userId),
+        userId: parsedUserId,
         period,
         totalDays,
         dailyRate,
@@ -113,6 +127,6 @@ export async function POST(request) {
     return apiResponse(salary, 201);
   } catch (error) {
     console.error('Create salary error:', error);
-    return apiError('Gagal menghitung gaji', 500);
+    return apiError('Gagal menghitung gaji: ' + (error.message || ''), 500);
   }
 }
