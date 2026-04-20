@@ -5,7 +5,7 @@ import { useToast } from '@/components/Toast';
 import { formatCurrency } from '@/lib/utils';
 import { useBluetooth } from '@/components/BluetoothPrinter';
 
-const PAYMENT_METHODS = ['Cash', 'Grab', 'QRIS', 'Lainnya'];
+const PAYMENT_METHODS = ['Cash', 'Grab', 'QRIS', 'GoFood'];
 
 export default function TransaksiPage() {
   const toast = useToast();

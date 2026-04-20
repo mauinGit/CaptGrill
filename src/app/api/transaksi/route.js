@@ -1,6 +1,9 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET transactions
 export async function GET(request) {
   try {

@@ -28,21 +28,31 @@ export default function AbsensiKasirPage() {
   // State untuk loading data
   const [loading, setLoading] = useState(true);
 
-  // Check all attendances today
+  // Check all attendances today for THIS user
   useEffect(() => {
     const fetchAttendances = async () => {
       const today = new Date().toISOString().split('T')[0];
-      console.log('Fetching attendances for:', today);
       
       try {
-        const response = await fetch(`/api/absensi?date=${today}`);
+        // Get current user ID first
+        const meRes = await fetch('/api/auth/me');
+        const meData = await meRes.json();
+        const myId = meData.user?.id;
+        
+        if (!myId) {
+          console.error('Could not get current user ID');
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(`/api/absensi?date=${today}&userId=${myId}`);
         if (!response.ok) {
           console.error('API error:', response.status);
+          setLoading(false);
           return;
         }
         
         const data = await response.json();
-        console.log('Fetched data:', data);
         
         if (Array.isArray(data)) {
           const newAttendances = {

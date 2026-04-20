@@ -1,6 +1,9 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET laporan pemasukan & pengeluaran
 export async function GET(request) {
   try {
@@ -34,6 +37,18 @@ export async function GET(request) {
 
     const totalIncome = transactions.reduce((sum, t) => sum + t.finalPrice, 0);
 
+    // Payment method breakdown
+    const paymentBreakdown = { Cash: 0, Grab: 0, QRIS: 0, GoFood: 0 };
+    transactions.forEach((t) => {
+      const method = t.paymentMethod || 'Cash';
+      if (paymentBreakdown.hasOwnProperty(method)) {
+        paymentBreakdown[method] += t.finalPrice;
+      } else {
+        // Map old methods to closest match
+        paymentBreakdown['Cash'] += t.finalPrice;
+      }
+    });
+
     // Get expenses
     const expenses = await prisma.expense.findMany({
       where: {
@@ -49,6 +64,7 @@ export async function GET(request) {
       totalIncome,
       totalExpense,
       profit: totalIncome - totalExpense,
+      paymentBreakdown,
       transactions,
       expenses,
     });

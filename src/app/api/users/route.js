@@ -2,6 +2,9 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { apiResponse, apiError } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET all users (admin only)
 export async function GET() {
   try {

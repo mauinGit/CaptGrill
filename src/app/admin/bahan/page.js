@@ -131,14 +131,14 @@ export default function BahanPage() {
               </thead>
               <tbody>
                 {ingredients.map((item, i) => (
-                  <tr key={item.id} className={item.stock <= item.minStock ? 'low-stock-row' : ''}>
+                  <tr key={item.id} className={parseFloat(item.stock) <= parseFloat(item.minStock) ? 'low-stock-row' : ''}>
                     <td>{i + 1}</td>
                     <td style={{ fontWeight: '600' }}>{item.name}</td>
                     <td>{item.unit}</td>
                     <td>{item.stock}</td>
                     <td>{item.minStock}</td>
                     <td>
-                      {item.stock <= item.minStock ? (
+                      {parseFloat(item.stock) <= parseFloat(item.minStock) ? (
                         <span className="badge badge-danger">⚠️ Stok Rendah</span>
                       ) : (
                         <span className="badge badge-success">✅ Aman</span>

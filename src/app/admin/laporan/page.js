@@ -6,6 +6,21 @@ import * as XLSX from 'xlsx';
 
 const PAGE_SIZE = 10;
 
+const PAYMENT_ICONS = {
+  Cash: '💵',
+  Grab: '🟢',
+  QRIS: '📱',
+  GoFood: '🟠',
+};
+
+// Shift time helper: Shift 1 = 06:00-15:00, Shift 2 = 15:00-06:00 (next day)
+function getTransactionShift(createdAt) {
+  const date = new Date(createdAt);
+  const hour = date.getHours();
+  if (hour >= 6 && hour < 15) return 'Shift 1';
+  return 'Shift 2';
+}
+
 export default function LaporanPage() {
   const [from, setFrom] = useState(new Date().toISOString().split('T')[0]);
   const [to, setTo] = useState(new Date().toISOString().split('T')[0]);
@@ -14,6 +29,7 @@ export default function LaporanPage() {
   const [receiptData, setReceiptData] = useState(null);
   const [txPage, setTxPage] = useState(1);
   const [exPage, setExPage] = useState(1);
+  const [shiftFilter, setShiftFilter] = useState('Semua');
 
   const fetchReport = async () => {
     setLoading(true);
@@ -21,8 +37,17 @@ export default function LaporanPage() {
     setData(await res.json());
     setTxPage(1);
     setExPage(1);
+    setShiftFilter('Semua');
     setLoading(false);
   };
+
+  // Filter transactions by shift
+  const filteredTransactions = data?.transactions?.filter((t) => {
+    if (shiftFilter === 'Semua') return true;
+    return getTransactionShift(t.createdAt) === shiftFilter;
+  }) || [];
+
+  const filteredIncome = filteredTransactions.reduce((sum, t) => sum + t.finalPrice, 0);
 
   const exportToExcel = () => {
     if (!data) return;
@@ -36,20 +61,26 @@ export default function LaporanPage() {
       ['Total Pemasukan', data.totalIncome],
       ['Total Pengeluaran', data.totalExpense],
       ['Laba / Rugi', data.profit],
+      [],
+      ['PEMASUKAN PER METODE PEMBAYARAN'],
+      ['Cash', data.paymentBreakdown?.Cash || 0],
+      ['Grab', data.paymentBreakdown?.Grab || 0],
+      ['QRIS', data.paymentBreakdown?.QRIS || 0],
+      ['GoFood', data.paymentBreakdown?.GoFood || 0],
     ];
     const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
     wsSummary['!cols'] = [{ wch: 25 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan');
 
-    const incomeHeader = [['DETAIL PEMASUKAN'], [`Periode: ${formatDate(from)} - ${formatDate(to)}`], [], ['No', 'No Order', 'Tanggal & Waktu', 'Kasir', 'Item', 'Bayar Via', 'Subtotal', 'Diskon', 'Total']];
+    const incomeHeader = [['DETAIL PEMASUKAN'], [`Periode: ${formatDate(from)} - ${formatDate(to)}`], [], ['No', 'No Order', 'Tanggal & Waktu', 'Kasir', 'Item', 'Bayar Via', 'Shift', 'Subtotal', 'Diskon', 'Total']];
     const incomeRows = (data.transactions || []).map((t, i) => {
       const items = t.details?.map((d) => `${d.menu?.name} x${d.quantity}`).join(', ') || '-';
-      return [i + 1, t.orderNumber || `#${t.id}`, new Date(t.createdAt).toLocaleString('id-ID'), t.user?.name || '-', items, t.paymentMethod || 'Cash', t.totalPrice, t.discount || 0, t.finalPrice];
+      return [i + 1, t.orderNumber || `#${t.id}`, new Date(t.createdAt).toLocaleString('id-ID'), t.user?.name || '-', items, t.paymentMethod || 'Cash', getTransactionShift(t.createdAt), t.totalPrice, t.discount || 0, t.finalPrice];
     });
     const totalIncome = (data.transactions || []).reduce((s, t) => s + t.finalPrice, 0);
-    incomeRows.push([], ['', '', '', '', '', '', '', 'TOTAL', totalIncome]);
+    incomeRows.push([], ['', '', '', '', '', '', '', '', 'TOTAL', totalIncome]);
     const wsIncome = XLSX.utils.aoa_to_sheet([...incomeHeader, ...incomeRows]);
-    wsIncome['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 22 }, { wch: 15 }, { wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
+    wsIncome['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 22 }, { wch: 15 }, { wch: 40 }, { wch: 12 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(wb, wsIncome, 'Pemasukan');
 
     const expenseHeader = [['DETAIL PENGELUARAN'], [`Periode: ${formatDate(from)} - ${formatDate(to)}`], [], ['No', 'Tanggal', 'Kategori', 'Deskripsi', 'Jumlah']];
@@ -63,9 +94,9 @@ export default function LaporanPage() {
     XLSX.writeFile(wb, `Laporan_CaptGrill_${from}_sd_${to}.xlsx`);
   };
 
-  const txTotalPages = data ? Math.ceil((data.transactions?.length || 0) / PAGE_SIZE) : 0;
+  const txTotalPages = Math.ceil(filteredTransactions.length / PAGE_SIZE);
   const exTotalPages = data ? Math.ceil((data.expenses?.length || 0) / PAGE_SIZE) : 0;
-  const paginatedTx = data?.transactions?.slice((txPage - 1) * PAGE_SIZE, txPage * PAGE_SIZE) || [];
+  const paginatedTx = filteredTransactions.slice((txPage - 1) * PAGE_SIZE, txPage * PAGE_SIZE);
   const paginatedEx = data?.expenses?.slice((exPage - 1) * PAGE_SIZE, exPage * PAGE_SIZE) || [];
 
   const Pagination = ({ current, total, onChange }) => (
@@ -110,6 +141,7 @@ export default function LaporanPage() {
 
       {data && (
         <>
+          {/* Main Summary */}
           <div className="summary-grid">
             <div className="summary-card">
               <div className="summary-card-icon green">💰</div>
@@ -138,18 +170,53 @@ export default function LaporanPage() {
             </div>
           </div>
 
+          {/* Payment Method Breakdown */}
+          {data.paymentBreakdown && (
+            <div className="summary-grid" style={{ marginTop: '12px' }}>
+              {Object.entries(data.paymentBreakdown).map(([method, amount]) => (
+                <div className="summary-card" key={method}>
+                  <div className="summary-card-icon blue" style={{ fontSize: '24px' }}>
+                    {PAYMENT_ICONS[method] || '💳'}
+                  </div>
+                  <div className="summary-card-info">
+                    <h3>{method}</h3>
+                    <div className="value" style={{ fontSize: '16px' }}>{formatCurrency(amount)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
             <div className="card">
-              <div className="card-header">
-                <h3 className="card-title">💰 Transaksi ({data.transactions?.length})</h3>
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                <h3 className="card-title">💰 Transaksi ({filteredTransactions.length}){shiftFilter !== 'Semua' ? ` — ${shiftFilter}` : ''}</h3>
+                <div className="btn-group">
+                  {['Semua', 'Shift 1', 'Shift 2'].map((s) => (
+                    <button
+                      key={s}
+                      className={`btn ${shiftFilter === s ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                      onClick={() => { setShiftFilter(s); setTxPage(1); }}
+                    >
+                      {s === 'Shift 1' ? '🌅 ' : s === 'Shift 2' ? '🌙 ' : ''}{s}
+                    </button>
+                  ))}
+                </div>
               </div>
-              {data.transactions?.length === 0 ? (
+
+              {shiftFilter !== 'Semua' && (
+                <div style={{ padding: '8px 16px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  {shiftFilter === 'Shift 1' ? '🌅 Shift 1: 06:00 — 15:00 WIB' : '🌙 Shift 2: 15:00 — 06:00 WIB'} • Total: <strong className="text-success">{formatCurrency(filteredIncome)}</strong>
+                </div>
+              )}
+
+              {filteredTransactions.length === 0 ? (
                 <p style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px' }}>Tidak ada transaksi</p>
               ) : (
                 <>
                   <div className="table-container">
                     <table>
-                      <thead><tr><th>No Order</th><th>Waktu</th><th>Kasir</th><th>Via</th><th>Total</th><th>Struk</th></tr></thead>
+                      <thead><tr><th>No Order</th><th>Waktu</th><th>Kasir</th><th>Via</th><th>Shift</th><th>Total</th><th>Struk</th></tr></thead>
                       <tbody>
                         {paginatedTx.map((t) => (
                           <tr key={t.id}>
@@ -157,6 +224,11 @@ export default function LaporanPage() {
                             <td style={{ fontSize: '12px' }}>{formatDateTime(t.createdAt)}</td>
                             <td>{t.user?.name}</td>
                             <td><span className="badge badge-info" style={{ fontSize: '10px' }}>{t.paymentMethod || 'Cash'}</span></td>
+                            <td>
+                              <span className={`badge ${getTransactionShift(t.createdAt) === 'Shift 1' ? 'badge-warning' : 'badge-info'}`} style={{ fontSize: '10px' }}>
+                                {getTransactionShift(t.createdAt) === 'Shift 1' ? '🌅' : '🌙'} {getTransactionShift(t.createdAt)}
+                              </span>
+                            </td>
                             <td className="font-bold text-success">{formatCurrency(t.finalPrice)}</td>
                             <td>
                               <button className="btn btn-secondary btn-sm" onClick={() => setReceiptData(t)}>🧾</button>

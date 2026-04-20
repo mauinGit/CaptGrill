@@ -1,6 +1,9 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const today = new Date();
@@ -18,21 +21,12 @@ export async function GET() {
 
     const todayIncome = todayTransactions.reduce((sum, t) => sum + t.finalPrice, 0);
 
-    // Low stock ingredients
-    const lowStockIngredients = await prisma.ingredient.findMany({
-      where: {
-        stock: { lte: prisma.ingredient.fields?.minStock || 0 },
-      },
-    });
-
-    // Actually we need raw query for this comparison
+    // Low stock ingredients (parseFloat for Decimal type)
     const allIngredients = await prisma.ingredient.findMany();
-    const lowStock = allIngredients.filter((i) => i.stock <= i.minStock);
+    const lowStock = allIngredients.filter((i) => parseFloat(i.stock) <= parseFloat(i.minStock));
 
     // Total menus
     const totalMenus = await prisma.menu.count();
-
-    // Total menus available
     const availableMenus = await prisma.menu.count({ where: { isAvailable: true } });
 
     // This month income & expense
@@ -55,6 +49,32 @@ export async function GET() {
     });
     const monthExpense = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
 
+    // Today's menu sales ranking
+    const todayDetails = await prisma.transactionDetail.findMany({
+      where: {
+        transaction: {
+          createdAt: { gte: today, lt: tomorrow },
+          status: 'COMPLETED',
+        },
+      },
+      include: {
+        menu: { select: { name: true, category: true } },
+      },
+    });
+
+    const menuSalesMap = {};
+    todayDetails.forEach((d) => {
+      const menuName = d.menu?.name || 'Unknown';
+      const category = d.menu?.category || '';
+      if (!menuSalesMap[menuName]) {
+        menuSalesMap[menuName] = { name: menuName, category, totalQty: 0, totalRevenue: 0 };
+      }
+      menuSalesMap[menuName].totalQty += d.quantity;
+      menuSalesMap[menuName].totalRevenue += d.subtotal;
+    });
+
+    const menuSales = Object.values(menuSalesMap).sort((a, b) => b.totalQty - a.totalQty);
+
     return apiResponse({
       todayTransactionCount: todayTransactions.length,
       todayIncome,
@@ -65,6 +85,7 @@ export async function GET() {
       monthIncome,
       monthExpense,
       monthProfit: monthIncome - monthExpense,
+      menuSales,
     });
   } catch (error) {
     console.error('Dashboard error:', error);

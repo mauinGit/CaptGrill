@@ -172,16 +172,24 @@ export function BluetoothProvider({ children }) {
     // Center align
     commands.push(new Uint8Array([ESC, 0x61, 0x01]));
 
-    // Bold on + double size
+    /// Bold on + double size
     commands.push(new Uint8Array([ESC, 0x45, 0x01]));
     commands.push(new Uint8Array([GS, 0x21, 0x11]));
     commands.push(encoder.encode('CAPT. GRILL\n'));
     commands.push(new Uint8Array([GS, 0x21, 0x00]));
     commands.push(new Uint8Array([ESC, 0x45, 0x00]));
 
-    // Subtitle
-    commands.push(encoder.encode('Jl. Nusantara Gg. Buntu, Timbangan Indralaya Utara, Ogan Ilir, Sumsel\n'));
+    // === TAMBAHKAN INI: Aktifkan font kecil untuk alamat ===
+    commands.push(new Uint8Array([ESC, 0x21, 0x01])); // Ukuran 1/4
+
+    // Subtitle (alamat dengan font kecil)
+    commands.push(encoder.encode('Jl.Nusantara,Gg.Buntu,Timbangan\n'));
+    commands.push(encoder.encode('Indralaya Utara,Ogan Ilir,Sumsel\n'));
     commands.push(encoder.encode('#PERFECTin1BITE\n'));
+
+    // === TAMBAHKAN INI: Kembalikan ke font normal ===
+    commands.push(new Uint8Array([ESC, 0x21, 0x00])); // Reset ke normal
+
     commands.push(encoder.encode('================================\n'));
 
     // Left align
@@ -246,7 +254,7 @@ export function BluetoothProvider({ children }) {
     commands.push(encoder.encode('Semoga harimu menyenangkan :)\n'));
     commands.push(encoder.encode('Follow IG/TT: @captgrill\n'));
     commands.push(encoder.encode('================================\n'));
-    commands.push(encoder.encode('Powered by Mahasiswa Sistem Informasi Unsri\n'));
+    commands.push(encoder.encode('Powered by IG: @adiatma_23\n'));
 
     // Feed & cut
     commands.push(encoder.encode('\n\n\n'));

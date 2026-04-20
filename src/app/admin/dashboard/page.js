@@ -124,6 +124,57 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Menu Sales Today */}
+      <div className="card" style={{ marginTop: '20px' }}>
+        <div className="card-header">
+          <h3 className="card-title">🏆 Menu Terlaris Hari Ini</h3>
+        </div>
+        {!data.menuSales || data.menuSales.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-tertiary)' }}>
+            <p>📭 Belum ada penjualan hari ini</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {data.menuSales.map((item, i) => (
+              <div
+                key={item.name}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '10px 14px',
+                  background: i === 0 ? 'linear-gradient(135deg, rgba(251,217,83,0.15), rgba(251,217,83,0.05))' : 'var(--bg-secondary)',
+                  borderRadius: 'var(--radius-md)',
+                  border: i === 0 ? '1px solid rgba(251,217,83,0.3)' : '1px solid var(--border-light)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '13px', fontWeight: '700',
+                    background: i === 0 ? '#fbd953' : i === 1 ? '#c0c0c0' : i === 2 ? '#cd7f32' : 'var(--bg-tertiary)',
+                    color: i < 3 ? '#000' : 'var(--text-secondary)',
+                  }}>
+                    {i + 1}
+                  </span>
+                  <div>
+                    <div style={{ fontWeight: '600', fontSize: '14px' }}>{item.name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                      {item.category === 'Minuman' ? '🥤' : item.category === 'Snack' ? '🍟' : '🍔'} {item.category}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--primary)' }}>{item.totalQty} porsi</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{formatCurrency(item.totalRevenue)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
