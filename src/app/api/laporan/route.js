@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+ import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';

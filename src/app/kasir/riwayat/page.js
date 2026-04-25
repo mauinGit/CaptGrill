@@ -31,6 +31,18 @@ export default function RiwayatPage() {
 
   const totalToday = filteredTransactions.reduce((sum, t) => sum + t.finalPrice, 0);
 
+  // Payment breakdown
+  const PAYMENT_ICONS = { Cash: '💵', Grab: '🟢', QRIS: '📱', GoFood: '🟠' };
+  const paymentBreakdown = { Cash: 0, Grab: 0, QRIS: 0, GoFood: 0 };
+  filteredTransactions.forEach((t) => {
+    const method = t.paymentMethod || 'Cash';
+    if (paymentBreakdown.hasOwnProperty(method)) {
+      paymentBreakdown[method] += t.finalPrice;
+    } else {
+      paymentBreakdown['Cash'] += t.finalPrice;
+    }
+  });
+
   return (
     <div className="animate-fade-in">
       <div className="navbar">
@@ -41,22 +53,37 @@ export default function RiwayatPage() {
       </div>
 
       {transactions.length > 0 && (
-        <div className="summary-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-          <div className="summary-card">
-            <div className="summary-card-icon orange">🛒</div>
-            <div className="summary-card-info">
-              <h3>Total Transaksi</h3>
-              <div className="value">{filteredTransactions.length}</div>
+        <>
+          <div className="summary-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+            <div className="summary-card">
+              <div className="summary-card-icon orange">🛒</div>
+              <div className="summary-card-info">
+                <h3>Total Transaksi</h3>
+                <div className="value">{filteredTransactions.length}</div>
+              </div>
+            </div>
+            <div className="summary-card">
+              <div className="summary-card-icon green">💰</div>
+              <div className="summary-card-info">
+                <h3>Total Pendapatan</h3>
+                <div className="value">{formatCurrency(totalToday)}</div>
+              </div>
             </div>
           </div>
-          <div className="summary-card">
-            <div className="summary-card-icon green">💰</div>
-            <div className="summary-card-info">
-              <h3>Total Pendapatan</h3>
-              <div className="value">{formatCurrency(totalToday)}</div>
-            </div>
+          <div className="summary-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', marginTop: '12px' }}>
+            {Object.entries(paymentBreakdown).map(([method, amount]) => (
+              <div className="summary-card" key={method}>
+                <div className="summary-card-icon blue" style={{ fontSize: '24px' }}>
+                  {PAYMENT_ICONS[method] || '💳'}
+                </div>
+                <div className="summary-card-info">
+                  <h3>{method}</h3>
+                  <div className="value" style={{ fontSize: '16px' }}>{formatCurrency(amount)}</div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        </>
       )}
 
       <div className="card">
