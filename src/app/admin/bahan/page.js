@@ -4,6 +4,14 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
 
+const CATEGORIES = ['Bahan', 'Sayur', 'Bumbu', 'Packaging'];
+const CATEGORY_COLORS = {
+  'Bahan': 'badge-info',
+  'Sayur': 'badge-success',
+  'Bumbu': 'badge-warning',
+  'Packaging': 'badge-secondary',
+};
+
 export default function BahanPage() {
   const toast = useToast();
   const [ingredients, setIngredients] = useState([]);
@@ -11,26 +19,33 @@ export default function BahanPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ name: '', unit: '', stock: '', minStock: '' });
+  const [form, setForm] = useState({ name: '', unit: '', stock: '', minStock: '', category: '' });
+  const [sortMode, setSortMode] = useState('kategori'); // 'kategori' or 'abjad'
 
   const fetchData = async () => {
-    const res = await fetch(`/api/bahan?search=${search}`);
+    const res = await fetch(`/api/bahan?search=${search}&sort=${sortMode}`);
     const data = await res.json();
     setIngredients(data);
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [search]);
+  useEffect(() => { fetchData(); }, [search, sortMode]);
 
   const openAdd = () => {
     setEditItem(null);
-    setForm({ name: '', unit: '', stock: '', minStock: '' });
+    setForm({ name: '', unit: '', stock: '', minStock: '', category: '' });
     setModalOpen(true);
   };
 
   const openEdit = (item) => {
     setEditItem(item);
-    setForm({ name: item.name, unit: item.unit, stock: item.stock.toString(), minStock: item.minStock.toString() });
+    setForm({
+      name: item.name,
+      unit: item.unit,
+      stock: item.stock.toString(),
+      minStock: item.minStock.toString(),
+      category: item.category || '',
+    });
     setModalOpen(true);
   };
 
@@ -81,6 +96,9 @@ export default function BahanPage() {
     });
   };
 
+  // Group ingredients by category for visual separation
+  let currentCategory = null;
+
   return (
     <div className="animate-fade-in">
       <div className="navbar">
@@ -103,6 +121,20 @@ export default function BahanPage() {
               style={{ paddingLeft: '40px' }}
             />
           </div>
+          <div className="btn-group" style={{ marginLeft: '12px' }}>
+            <button
+              className={`btn ${sortMode === 'kategori' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+              onClick={() => setSortMode('kategori')}
+            >
+              📂 Kategori
+            </button>
+            <button
+              className={`btn ${sortMode === 'abjad' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+              onClick={() => setSortMode('abjad')}
+            >
+              🔤 Abjad
+            </button>
+          </div>
         </div>
         <div className="toolbar-right">
           <button className="btn btn-secondary" onClick={handleCopyNotes}>📋 Salin Catatan</button>
@@ -122,6 +154,7 @@ export default function BahanPage() {
                 <tr>
                   <th>No</th>
                   <th>Nama Bahan</th>
+                  <th>Kategori</th>
                   <th>Satuan</th>
                   <th>Stok</th>
                   <th>Min Stok</th>
@@ -130,28 +163,61 @@ export default function BahanPage() {
                 </tr>
               </thead>
               <tbody>
-                {ingredients.map((item, i) => (
-                  <tr key={item.id} className={parseFloat(item.stock) <= parseFloat(item.minStock) ? 'low-stock-row' : ''}>
-                    <td>{i + 1}</td>
-                    <td style={{ fontWeight: '600' }}>{item.name}</td>
-                    <td>{item.unit}</td>
-                    <td>{item.stock}</td>
-                    <td>{item.minStock}</td>
-                    <td>
-                      {parseFloat(item.stock) <= parseFloat(item.minStock) ? (
-                        <span className="badge badge-danger">⚠️ Stok Rendah</span>
-                      ) : (
-                        <span className="badge badge-success">✅ Aman</span>
+                {ingredients.map((item, i) => {
+                  // Show category separator row when sorted by category
+                  let showSeparator = false;
+                  if (sortMode === 'kategori' && item.category !== currentCategory) {
+                    currentCategory = item.category;
+                    showSeparator = true;
+                  }
+                  return (
+                    <>
+                      {showSeparator && (
+                        <tr key={`sep-${item.category || 'none'}`}>
+                          <td colSpan={8} style={{
+                            background: 'var(--bg-tertiary)',
+                            fontWeight: '700',
+                            fontSize: '13px',
+                            padding: '8px 16px',
+                            color: 'var(--text-secondary)',
+                            borderBottom: '2px solid var(--border)',
+                          }}>
+                            {item.category ? `📂 ${item.category}` : '📂 Tanpa Kategori'}
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td>
-                      <div className="btn-group">
-                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}>✏️</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>🗑️</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      <tr key={item.id} className={parseFloat(item.stock) <= parseFloat(item.minStock) ? 'low-stock-row' : ''}>
+                        <td>{i + 1}</td>
+                        <td style={{ fontWeight: '600' }}>{item.name}</td>
+                        <td>
+                          {item.category ? (
+                            <span className={`badge ${CATEGORY_COLORS[item.category] || 'badge-secondary'}`}>
+                              {item.category}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>—</span>
+                          )}
+                        </td>
+                        <td>{item.unit}</td>
+                        <td>{item.stock}</td>
+                        <td>{item.minStock}</td>
+                        <td>
+                          {parseFloat(item.stock) <= parseFloat(item.minStock) ? (
+                            <span className="badge badge-danger">⚠️ Stok Rendah</span>
+                          ) : (
+                            <span className="badge badge-success">✅ Aman</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="btn-group">
+                            <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}>✏️</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>🗑️</button>
+                          </div>
+                        </td>
+                      </tr>
+                    </>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -174,6 +240,15 @@ export default function BahanPage() {
             </div>
             <div className="form-row">
               <div className="form-group">
+                <label className="form-label">Kategori</label>
+                <select className="form-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                  <option value="">Pilih kategori</option>
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
                 <label className="form-label">Satuan</label>
                 <select className="form-select" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} required>
                   <option value="">Pilih satuan</option>
@@ -182,6 +257,8 @@ export default function BahanPage() {
                   <option value="ml">mL</option>
                 </select>
               </div>
+            </div>
+            <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Stok Saat Ini</label>
                 <input
@@ -193,17 +270,17 @@ export default function BahanPage() {
                   placeholder="0"
                 />
               </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Stok Minimum (Alert)</label>
-              <input
-                type="number"
-                step="0.1"
-                className="form-input"
-                value={form.minStock}
-                onChange={(e) => setForm({ ...form, minStock: e.target.value })}
-                placeholder="0"
-              />
+              <div className="form-group">
+                <label className="form-label">Stok Minimum (Alert)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="form-input"
+                  value={form.minStock}
+                  onChange={(e) => setForm({ ...form, minStock: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
             </div>
           </div>
           <div className="modal-footer">

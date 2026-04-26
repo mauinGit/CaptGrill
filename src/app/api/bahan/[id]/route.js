@@ -6,7 +6,7 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, unit, stock, minStock } = body;
+    const { name, unit, stock, minStock, category } = body;
 
     const ingredient = await prisma.ingredient.update({
       where: { id: parseInt(id) },
@@ -15,6 +15,7 @@ export async function PUT(request, { params }) {
         ...(unit && { unit }),
         ...(stock !== undefined && { stock: parseFloat(stock) }),
         ...(minStock !== undefined && { minStock: parseFloat(minStock) }),
+        ...(category !== undefined && { category: category || null }),
       },
     });
 

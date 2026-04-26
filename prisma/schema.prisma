@@ -51,6 +51,7 @@ model Ingredient {
   unit      String   @db.VarChar(20)
   stock     Decimal    @default(0)
   minStock  Decimal    @default(0)
+  category  String?  @db.VarChar(50)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
