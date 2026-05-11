@@ -25,11 +25,13 @@ export async function POST(request) {
       return apiError('Username atau password salah', 401);
     }
 
+    const isDemo = user.username.startsWith('demo');
     const token = signToken({
       id: user.id,
       username: user.username,
       name: user.name,
       role: user.role,
+      isDemo,
     });
 
     // Log login activity

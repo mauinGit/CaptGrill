@@ -28,6 +28,21 @@ export async function middleware(request) {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'captgrill-secret');
     const { payload } = await jwtVerify(token, secret);
 
+    // Block write operations for demo users
+    if (payload.isDemo) {
+      const method = request.method;
+      const isWriteMethod = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+      const isApiRoute = pathname.startsWith('/api/');
+      const isAuthRoute = pathname.startsWith('/api/auth/');
+
+      if (isWriteMethod && isApiRoute && !isAuthRoute) {
+        return NextResponse.json(
+          { error: '🔒 Akun demo hanya bisa melihat (view-only). Tidak bisa melakukan perubahan data.' },
+          { status: 403 }
+        );
+      }
+    }
+
     // Role-based access
     if (pathname.startsWith('/admin') && payload.role !== 'ADMIN') {
       return NextResponse.redirect(new URL('/kasir/transaksi', request.url));
@@ -41,6 +56,7 @@ export async function middleware(request) {
     requestHeaders.set('x-user-id', payload.id.toString());
     requestHeaders.set('x-user-role', payload.role);
     requestHeaders.set('x-user-name', payload.name);
+    requestHeaders.set('x-user-demo', payload.isDemo ? 'true' : 'false');
 
     return NextResponse.next({
       request: { headers: requestHeaders },

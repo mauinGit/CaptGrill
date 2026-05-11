@@ -25,6 +25,34 @@ async function main() {
     },
   });
   console.log('✅ Admin created:', admin.username);
+
+  // Create demo admin (view-only)
+  const demoAdminPassword = await bcrypt.hash('12345678', 10);
+  const demoAdmin = await prisma.user.upsert({
+    where: { username: 'demoadmin' },
+    update: {},
+    create: {
+      username: 'demoadmin',
+      password: demoAdminPassword,
+      name: 'Demo Admin',
+      role: 'ADMIN',
+    },
+  });
+  console.log('✅ Demo Admin created:', demoAdmin.username);
+
+  // Create demo kasir (view-only)
+  const demoKasirPassword = await bcrypt.hash('12345678', 10);
+  const demoKasir = await prisma.user.upsert({
+    where: { username: 'demokasir' },
+    update: {},
+    create: {
+      username: 'demokasir',
+      password: demoKasirPassword,
+      name: 'Demo Kasir',
+      role: 'KASIR',
+    },
+  });
+  console.log('✅ Demo Kasir created:', demoKasir.username);
 }
 
 main()
