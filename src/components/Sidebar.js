@@ -18,7 +18,7 @@ const adminLinks = [
   { href: '/admin/pembuatan-bahan', icon: '🧪', label: 'Pembuatan Bahan' },
   { href: '/admin/menu', icon: '🍔', label: 'Manajemen Menu' },
   { href: '/admin/pengeluaran', icon: '💸', label: 'Pengeluaran' },
-  { href: '/admin/laporan', icon: '📋', label: 'Laporan' },
+  { href: '/admin/laporan', icon: '📊', label: 'Live Data' },
   { href: '/admin/grafik', icon: '📈', label: 'Grafik Keuangan' },
   { href: '/admin/absensi', icon: '📅', label: 'Absensi Karyawan' },
   { href: '/admin/gaji', icon: '💰', label: 'Gaji Karyawan' },

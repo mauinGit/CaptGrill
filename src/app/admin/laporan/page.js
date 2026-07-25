@@ -1,126 +1,172 @@
 'use client';
 
-import { useState } from 'react';
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
-import * as XLSX from 'xlsx';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import DataGrid from '@/components/DataGrid';
+import { formatCurrency } from '@/lib/utils';
 
-const PAGE_SIZE = 10;
+const TABS = [
+  { key: 'transaksi', icon: '💰', label: 'Transaksi' },
+  { key: 'pengeluaran', icon: '💸', label: 'Pengeluaran' },
+  { key: 'absensi', icon: '📅', label: 'Absensi' },
+  { key: 'gaji', icon: '💰', label: 'Gaji' },
+];
 
-const PAYMENT_ICONS = {
-  Cash: '💵',
-  Grab: '🟢',
-  QRIS: '📱',
-  GoFood: '🟠',
-};
+const PAYMENT_ICONS = { Cash: '💵', Grab: '🟢', QRIS: '📱', GoFood: '🟠' };
 
-// Shift time helper: Shift 1 = 06:00-15:00, Shift 2 = 15:00-06:00 (next day)
-function getTransactionShift(createdAt) {
-  const date = new Date(createdAt);
-  const hour = date.getHours();
-  if (hour >= 6 && hour < 15) return 'Shift 1';
-  return 'Shift 2';
-}
+// Column definitions for each tab
+const TRANSAKSI_COLUMNS = [
+  { key: 'orderNumber', label: 'No Order', width: 150, type: 'text' },
+  { key: 'createdAt', label: 'Waktu', width: 180, type: 'datetime' },
+  { key: 'kasir', label: 'Kasir', width: 120, type: 'text' },
+  { key: 'items', label: 'Item', width: 280, type: 'text' },
+  { key: 'paymentMethod', label: 'Via', width: 90, type: 'badge', badgeClass: () => 'badge-info' },
+  { key: 'shift', label: 'Shift', width: 100, type: 'badge', badgeClass: (val) => val === 'Shift 1' ? 'badge-warning' : 'badge-info' },
+  { key: 'totalPrice', label: 'Subtotal', width: 130, type: 'currency' },
+  { key: 'discount', label: 'Diskon', width: 100, type: 'currency' },
+  { key: 'finalPrice', label: 'Total', width: 140, type: 'currency' },
+];
+
+const PENGELUARAN_COLUMNS = [
+  { key: 'date', label: 'Tanggal', width: 150, type: 'date' },
+  { key: 'category', label: 'Kategori', width: 160, type: 'badge', badgeClass: () => 'badge-warning' },
+  { key: 'description', label: 'Deskripsi', width: 300, type: 'text' },
+  { key: 'amount', label: 'Nominal', width: 150, type: 'currency' },
+];
+
+const ABSENSI_COLUMNS = [
+  { key: 'name', label: 'Nama', width: 150, type: 'text' },
+  { key: 'date', label: 'Tanggal', width: 150, type: 'date' },
+  { key: 'clockIn', label: 'Jam Masuk', width: 130, type: 'datetime',
+    format: (val) => new Date(val).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  },
+  { key: 'purpose', label: 'Tujuan', width: 140, type: 'badge',
+    badgeClass: (val) => val === 'Membuat Bahan' ? 'badge-warning' : 'badge-info'
+  },
+  { key: 'hasPhoto', label: 'Foto', width: 80, type: 'text',
+    format: (val) => val ? '📸 Ada' : '-'
+  },
+  { key: 'hasLocation', label: 'Lokasi', width: 100, type: 'text',
+    format: (val) => val ? '✅ Valid' : '⚠️ N/A'
+  },
+];
+
+const GAJI_COLUMNS = [
+  { key: 'name', label: 'Nama', width: 150, type: 'text' },
+  { key: 'period', label: 'Periode', width: 120, type: 'text' },
+  { key: 'shiftDays', label: 'Hari Shift', width: 100, type: 'number' },
+  { key: 'shiftRate', label: 'Rate Shift', width: 130, type: 'currency' },
+  { key: 'gajiShift', label: 'Gaji Shift', width: 140, type: 'currency' },
+  { key: 'produksiDays', label: 'Kali Produksi', width: 110, type: 'number' },
+  { key: 'produksiRate', label: 'Rate Produksi', width: 130, type: 'currency' },
+  { key: 'gajiProduksi', label: 'Gaji Produksi', width: 140, type: 'currency' },
+  { key: 'totalSalary', label: 'Total Gaji', width: 150, type: 'currency' },
+];
+
+const REFRESH_INTERVAL = 30000; // 30 seconds
 
 export default function LaporanPage() {
+  // Date range: default to today
   const [from, setFrom] = useState(new Date().toISOString().split('T')[0]);
   const [to, setTo] = useState(new Date().toISOString().split('T')[0]);
+  const [activeTab, setActiveTab] = useState('transaksi');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [receiptData, setReceiptData] = useState(null);
-  const [txPage, setTxPage] = useState(1);
-  const [exPage, setExPage] = useState(1);
-  const [shiftFilter, setShiftFilter] = useState('Semua');
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const intervalRef = useRef(null);
 
-  const fetchReport = async () => {
-    setLoading(true);
-    const res = await fetch(`/api/laporan?from=${from}&to=${to}`);
-    setData(await res.json());
-    setTxPage(1);
-    setExPage(1);
-    setShiftFilter('Semua');
-    setLoading(false);
+  // Fetch data
+  const fetchData = useCallback(async (isAutoRefresh = false) => {
+    if (isAutoRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      const res = await fetch(`/api/live-data?from=${from}&to=${to}&tab=all`);
+      if (res.ok) {
+        const result = await res.json();
+        setData(result);
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [from, to]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchData();
+  }, [from, to]);
+
+  // Auto-refresh interval
+  useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        fetchData(true);
+      }, REFRESH_INTERVAL);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [autoRefresh, fetchData]);
+
+  // Get data & columns for current tab
+  const getTabData = () => {
+    if (!data) return { items: [], columns: [] };
+
+    switch (activeTab) {
+      case 'transaksi':
+        return { items: data.transactions || [], columns: TRANSAKSI_COLUMNS };
+      case 'pengeluaran':
+        return { items: data.expenses || [], columns: PENGELUARAN_COLUMNS };
+      case 'absensi':
+        return { items: data.attendances || [], columns: ABSENSI_COLUMNS };
+      case 'gaji':
+        return { items: data.salaries || [], columns: GAJI_COLUMNS };
+      default:
+        return { items: [], columns: [] };
+    }
   };
 
-  // Filter transactions by shift
-  const filteredTransactions = data?.transactions?.filter((t) => {
-    if (shiftFilter === 'Semua') return true;
-    return getTransactionShift(t.createdAt) === shiftFilter;
-  }) || [];
+  const { items, columns } = getTabData();
 
-  const filteredIncome = filteredTransactions.reduce((sum, t) => sum + t.finalPrice, 0);
-
-  const exportToExcel = () => {
-    if (!data) return;
-    const wb = XLSX.utils.book_new();
-
-    const summaryData = [
-      ['LAPORAN KEUANGAN CAPTGRILL'],
-      [`Periode: ${formatDate(from)} - ${formatDate(to)}`],
-      [],
-      ['Keterangan', 'Jumlah'],
-      ['Total Pemasukan', data.totalIncome],
-      ['Total Pengeluaran', data.totalExpense],
-      ['Laba / Rugi', data.profit],
-      [],
-      ['PEMASUKAN PER METODE PEMBAYARAN'],
-      ['Cash', data.paymentBreakdown?.Cash || 0],
-      ['Grab', data.paymentBreakdown?.Grab || 0],
-      ['QRIS', data.paymentBreakdown?.QRIS || 0],
-      ['GoFood', data.paymentBreakdown?.GoFood || 0],
-    ];
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-    wsSummary['!cols'] = [{ wch: 25 }, { wch: 20 }];
-    XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan');
-
-    const incomeHeader = [['DETAIL PEMASUKAN'], [`Periode: ${formatDate(from)} - ${formatDate(to)}`], [], ['No', 'No Order', 'Tanggal & Waktu', 'Kasir', 'Item', 'Bayar Via', 'Shift', 'Subtotal', 'Diskon', 'Total']];
-    const incomeRows = (data.transactions || []).map((t, i) => {
-      const items = t.details?.map((d) => `${d.menu?.name} x${d.quantity}`).join(', ') || '-';
-      return [i + 1, t.orderNumber || `#${t.id}`, new Date(t.createdAt).toLocaleString('id-ID'), t.user?.name || '-', items, t.paymentMethod || 'Cash', getTransactionShift(t.createdAt), t.totalPrice, t.discount || 0, t.finalPrice];
-    });
-    const totalIncome = (data.transactions || []).reduce((s, t) => s + t.finalPrice, 0);
-    incomeRows.push([], ['', '', '', '', '', '', '', '', 'TOTAL', totalIncome]);
-    const wsIncome = XLSX.utils.aoa_to_sheet([...incomeHeader, ...incomeRows]);
-    wsIncome['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 22 }, { wch: 15 }, { wch: 40 }, { wch: 12 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsIncome, 'Pemasukan');
-
-    const expenseHeader = [['DETAIL PENGELUARAN'], [`Periode: ${formatDate(from)} - ${formatDate(to)}`], [], ['No', 'Tanggal', 'Kategori', 'Deskripsi', 'Jumlah']];
-    const expenseRows = (data.expenses || []).map((e, i) => [i + 1, new Date(e.date).toLocaleDateString('id-ID'), e.category, e.description, e.amount]);
-    const totalExpense = (data.expenses || []).reduce((s, e) => s + e.amount, 0);
-    expenseRows.push([], ['', '', '', 'TOTAL', totalExpense]);
-    const wsExpense = XLSX.utils.aoa_to_sheet([...expenseHeader, ...expenseRows]);
-    wsExpense['!cols'] = [{ wch: 5 }, { wch: 18 }, { wch: 18 }, { wch: 35 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsExpense, 'Pengeluaran');
-
-    XLSX.writeFile(wb, `Laporan_CaptGrill_${from}_sd_${to}.xlsx`);
+  // Tab counts
+  const getTabCount = (key) => {
+    if (!data) return 0;
+    switch (key) {
+      case 'transaksi': return data.transactions?.length || 0;
+      case 'pengeluaran': return data.expenses?.length || 0;
+      case 'absensi': return data.attendances?.length || 0;
+      case 'gaji': return data.salaries?.length || 0;
+      default: return 0;
+    }
   };
 
-  const txTotalPages = Math.ceil(filteredTransactions.length / PAGE_SIZE);
-  const exTotalPages = data ? Math.ceil((data.expenses?.length || 0) / PAGE_SIZE) : 0;
-  const paginatedTx = filteredTransactions.slice((txPage - 1) * PAGE_SIZE, txPage * PAGE_SIZE);
-  const paginatedEx = data?.expenses?.slice((exPage - 1) * PAGE_SIZE, exPage * PAGE_SIZE) || [];
-
-  const Pagination = ({ current, total, onChange }) => (
-    total > 1 && (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '12px', flexWrap: 'wrap' }}>
-        <button className="btn btn-secondary btn-sm" onClick={() => onChange(1)} disabled={current === 1}>«</button>
-        <button className="btn btn-secondary btn-sm" onClick={() => onChange(current - 1)} disabled={current === 1}>‹</button>
-        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Hal {current}/{total}</span>
-        <button className="btn btn-secondary btn-sm" onClick={() => onChange(current + 1)} disabled={current === total}>›</button>
-        <button className="btn btn-secondary btn-sm" onClick={() => onChange(total)} disabled={current === total}>»</button>
-      </div>
-    )
-  );
+  // Export filename
+  const getExportFilename = () => {
+    const tabLabel = TABS.find((t) => t.key === activeTab)?.label || 'Data';
+    return `CaptGrill_${tabLabel}_${from}_sd_${to}`;
+  };
 
   return (
     <div className="animate-fade-in">
+      {/* Navbar */}
       <div className="navbar">
         <div className="navbar-left">
-          <h1>📋 Laporan Keuangan</h1>
-          <p>Laporan pemasukan dan pengeluaran</p>
+          <h1>📊 Live Data — Spreadsheet</h1>
+          <p>Data real-time dalam bentuk spreadsheet interaktif</p>
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: '20px' }}>
+      {/* Date Range & Controls */}
+      <div className="card" style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'end', flexWrap: 'wrap' }}>
           <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '150px' }}>
             <label className="form-label">Dari Tanggal</label>
@@ -130,249 +176,109 @@ export default function LaporanPage() {
             <label className="form-label">Sampai Tanggal</label>
             <input type="date" className="form-input" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
-          <button className="btn btn-primary" onClick={fetchReport} disabled={loading}>
+          <button className="btn btn-primary" onClick={() => fetchData()} disabled={loading}>
             {loading ? '⏳' : '🔍'} Tampilkan
           </button>
-          {data && (
-            <button className="btn btn-success" onClick={exportToExcel}>📥 Export Excel</button>
-          )}
         </div>
       </div>
 
       {data && (
         <>
-          {/* Main Summary */}
-          <div className="summary-grid">
-            <div className="summary-card">
-              <div className="summary-card-icon green">💰</div>
-              <div className="summary-card-info">
-                <h3>Total Pemasukan</h3>
-                <div className="value text-success">{formatCurrency(data.totalIncome)}</div>
-              </div>
-            </div>
-            <div className="summary-card">
-              <div className="summary-card-icon red">💸</div>
-              <div className="summary-card-info">
-                <h3>Total Pengeluaran</h3>
-                <div className="value text-danger">{formatCurrency(data.totalExpense)}</div>
-              </div>
-            </div>
-            <div className="summary-card">
-              <div className={`summary-card-icon ${data.profit >= 0 ? 'green' : 'red'}`}>
-                {data.profit >= 0 ? '📈' : '📉'}
-              </div>
-              <div className="summary-card-info">
-                <h3>Laba / Rugi</h3>
-                <div className={`value ${data.profit >= 0 ? 'text-success' : 'text-danger'}`}>
-                  {formatCurrency(data.profit)}
+          {/* Summary Cards */}
+          <div className="livedata-summary" style={{ borderRadius: 'var(--radius-md)', marginBottom: '16px', border: '1px solid var(--border)' }}>
+            <div className="livedata-summary-card">
+              <span className="livedata-summary-icon">💰</span>
+              <div className="livedata-summary-info">
+                <h4>Total Pemasukan</h4>
+                <div className="livedata-value green">
+                  {formatCurrency(data.transactionSummary?.totalIncome || 0)}
                 </div>
               </div>
             </div>
+            <div className="livedata-summary-card">
+              <span className="livedata-summary-icon">💸</span>
+              <div className="livedata-summary-info">
+                <h4>Total Pengeluaran</h4>
+                <div className="livedata-value red">
+                  {formatCurrency(data.expenseSummary?.totalExpense || 0)}
+                </div>
+              </div>
+            </div>
+            <div className="livedata-summary-card">
+              <span className="livedata-summary-icon">{(data.profit || 0) >= 0 ? '📈' : '📉'}</span>
+              <div className="livedata-summary-info">
+                <h4>Laba / Rugi</h4>
+                <div className={`livedata-value ${(data.profit || 0) >= 0 ? 'green' : 'red'}`}>
+                  {formatCurrency(data.profit || 0)}
+                </div>
+              </div>
+            </div>
+
+            {/* Payment method breakdown */}
+            {data.transactionSummary?.paymentBreakdown &&
+              Object.entries(data.transactionSummary.paymentBreakdown)
+                .filter(([, amount]) => amount > 0)
+                .map(([method, amount]) => (
+                  <div className="livedata-summary-card" key={method}>
+                    <span className="livedata-summary-icon">{PAYMENT_ICONS[method] || '💳'}</span>
+                    <div className="livedata-summary-info">
+                      <h4>{method}</h4>
+                      <div className="livedata-value">{formatCurrency(amount)}</div>
+                    </div>
+                  </div>
+                ))
+            }
           </div>
 
-          {/* Payment Method Breakdown */}
-          {data.paymentBreakdown && (
-            <div className="summary-grid" style={{ marginTop: '12px' }}>
-              {Object.entries(data.paymentBreakdown).map(([method, amount]) => (
-                <div className="summary-card" key={method}>
-                  <div className="summary-card-icon blue" style={{ fontSize: '24px' }}>
-                    {PAYMENT_ICONS[method] || '💳'}
-                  </div>
-                  <div className="summary-card-info">
-                    <h3>{method}</h3>
-                    <div className="value" style={{ fontSize: '16px' }}>{formatCurrency(amount)}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-            <div className="card">
-              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                <h3 className="card-title">💰 Transaksi ({filteredTransactions.length}){shiftFilter !== 'Semua' ? ` — ${shiftFilter}` : ''}</h3>
-                <div className="btn-group">
-                  {['Semua', 'Shift 1', 'Shift 2'].map((s) => (
-                    <button
-                      key={s}
-                      className={`btn ${shiftFilter === s ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-                      onClick={() => { setShiftFilter(s); setTxPage(1); }}
-                    >
-                      {s === 'Shift 1' ? '🌅 ' : s === 'Shift 2' ? '🌙 ' : ''}{s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {shiftFilter !== 'Semua' && (
-                <div style={{ padding: '8px 16px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  {shiftFilter === 'Shift 1' ? '🌅 Shift 1: 06:00 — 15:00 WIB' : '🌙 Shift 2: 15:00 — 06:00 WIB'} • Total: <strong className="text-success">{formatCurrency(filteredIncome)}</strong>
-                </div>
-              )}
-
-              {filteredTransactions.length === 0 ? (
-                <p style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px' }}>Tidak ada transaksi</p>
-              ) : (
-                <>
-                  <div className="table-container">
-                    <table>
-                      <thead><tr><th>No Order</th><th>Waktu</th><th>Kasir</th><th>Via</th><th>Shift</th><th>Total</th><th>Struk</th></tr></thead>
-                      <tbody>
-                        {paginatedTx.map((t) => (
-                          <tr key={t.id}>
-                            <td style={{ fontSize: '11px', fontWeight: '600' }}>{t.orderNumber || `#${t.id}`}</td>
-                            <td style={{ fontSize: '12px' }}>{formatDateTime(t.createdAt)}</td>
-                            <td>{t.user?.name}</td>
-                            <td><span className="badge badge-info" style={{ fontSize: '10px' }}>{t.paymentMethod || 'Cash'}</span></td>
-                            <td>
-                              <span className={`badge ${getTransactionShift(t.createdAt) === 'Shift 1' ? 'badge-warning' : 'badge-info'}`} style={{ fontSize: '10px' }}>
-                                {getTransactionShift(t.createdAt) === 'Shift 1' ? '🌅' : '🌙'} {getTransactionShift(t.createdAt)}
-                              </span>
-                            </td>
-                            <td className="font-bold text-success">{formatCurrency(t.finalPrice)}</td>
-                            <td>
-                              <button className="btn btn-secondary btn-sm" onClick={() => setReceiptData(t)}>🧾</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <Pagination current={txPage} total={txTotalPages} onChange={setTxPage} />
-                </>
-              )}
-            </div>
-
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title">💸 Pengeluaran ({data.expenses?.length})</h3>
-              </div>
-              {data.expenses?.length === 0 ? (
-                <p style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px' }}>Tidak ada pengeluaran</p>
-              ) : (
-                <>
-                  <div className="table-container">
-                    <table>
-                      <thead><tr><th>Tanggal</th><th>Kategori</th><th>Deskripsi</th><th>Nominal</th></tr></thead>
-                      <tbody>
-                        {paginatedEx.map((e) => (
-                          <tr key={e.id}>
-                            <td style={{ fontSize: '12px' }}>{formatDate(e.date)}</td>
-                            <td><span className="badge badge-warning">{e.category}</span></td>
-                            <td style={{ fontSize: '13px' }}>{e.description}</td>
-                            <td className="font-bold text-danger">{formatCurrency(e.amount)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <Pagination current={exPage} total={exTotalPages} onChange={setExPage} />
-                </>
-              )}
-            </div>
+          {/* Sheet Tabs */}
+          <div className="datagrid-sheet-tabs" style={{ borderRadius: 'var(--radius-md) var(--radius-md) 0 0' }}>
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                className={`datagrid-sheet-tab ${activeTab === tab.key ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                <span className="datagrid-sheet-tab-icon">{tab.icon}</span>
+                {tab.label}
+                <span className="datagrid-sheet-tab-count">{getTabCount(tab.key)}</span>
+              </button>
+            ))}
           </div>
+
+          {/* Refresh Indicator */}
+          <div className="datagrid-refresh-bar">
+            <div className={`datagrid-refresh-dot ${!autoRefresh ? '' : ''}`} style={{ background: autoRefresh ? 'var(--success)' : 'var(--text-tertiary)', animation: autoRefresh ? undefined : 'none' }} />
+            <span>
+              {autoRefresh ? 'Live' : 'Dijeda'} • Terakhir diperbarui: {lastUpdated ? lastUpdated.toLocaleTimeString('id-ID') : '-'}
+              {isRefreshing && <span style={{ marginLeft: '8px', color: 'var(--primary)' }}>Memperbarui...</span>}
+            </span>
+            <button
+              className="datagrid-refresh-btn"
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              title={autoRefresh ? 'Jeda auto-refresh' : 'Aktifkan auto-refresh'}
+            >
+              {autoRefresh ? '⏸️ Jeda' : '▶️ Live'}
+            </button>
+            <button
+              className="datagrid-refresh-btn"
+              onClick={() => fetchData(true)}
+              disabled={isRefreshing}
+              title="Refresh sekarang"
+            >
+              <span className={isRefreshing ? 'datagrid-refresh-spin' : ''}>🔄</span> Refresh
+            </button>
+          </div>
+
+          {/* DataGrid */}
+          <DataGrid
+            columns={columns}
+            data={items}
+            title={TABS.find((t) => t.key === activeTab)?.label || 'Data'}
+            icon={TABS.find((t) => t.key === activeTab)?.icon || '📊'}
+            exportFilename={getExportFilename()}
+            loading={loading}
+          />
         </>
-      )}
-
-      {/* Receipt Modal */}
-      {receiptData && (
-        <div className="modal-overlay" onClick={() => setReceiptData(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-            <div className="modal-header">
-              <h2>🧾 Struk Transaksi</h2>
-              <button className="modal-close" onClick={() => setReceiptData(null)}>✕</button>
-            </div>
-            <div className="modal-body">
-              <div style={{
-                background: '#fff',
-                color: '#000',
-                padding: '24px',
-                borderRadius: '12px',
-                fontFamily: "'Courier New', monospace",
-                fontSize: '13px',
-                lineHeight: '1.6',
-              }}>
-                {/* Header with Logo */}
-                <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-                  <img src="/assets/logo-bw.png" alt="CaptGrill" style={{ width: '140px', height: '80px', objectFit: 'contain', margin: '0 auto 8px', display: 'block' }} onError={(e) => { e.target.style.display='none'; }} />
-                  <div style={{ fontSize: '18px', fontWeight: '700' }}>CaptGrill</div>
-                  <div style={{ fontSize: '11px', color: '#666' }}>Jl. Nusantara Gg. Buntu, Timbangan, Kecamatan Indralaya Utara, Kabupaten Ogan Ilir, Sumatera Selatan 30862</div>
-                </div>
-
-                <div style={{ borderTop: '2px dashed #ccc', margin: '8px 0' }} />
-
-                {/* Info */}
-                <div style={{ fontSize: '11px', color: '#555', marginBottom: '8px' }}>
-                  <div>No: {receiptData.orderNumber || `#${receiptData.id}`}</div>
-                  <div>Tanggal: {new Date(receiptData.createdAt).toLocaleString('id-ID')}</div>
-                  <div>Kasir: {receiptData.user?.name || '-'}</div>
-                </div>
-
-                <div style={{ borderTop: '1px dashed #ccc', margin: '8px 0' }} />
-
-                {/* Items */}
-                {receiptData.details?.map((d, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                    <span>{d.menu?.name} x{d.quantity}</span>
-                    <span style={{ fontWeight: '600' }}>{formatCurrency(d.subtotal)}</span>
-                  </div>
-                ))}
-
-                <div style={{ borderTop: '1px dashed #ccc', margin: '8px 0' }} />
-
-                {/* Totals */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(receiptData.totalPrice)}</span>
-                </div>
-                {receiptData.discount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', color: '#dc2626' }}>
-                    <span>Diskon</span>
-                    <span>-{formatCurrency(receiptData.discount)}</span>
-                  </div>
-                )}
-
-                <div style={{ borderTop: '2px dashed #ccc', margin: '8px 0' }} />
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontWeight: '700', fontSize: '16px' }}>
-                  <span>TOTAL</span>
-                  <span>{formatCurrency(receiptData.finalPrice)}</span>
-                </div>
-
-                {/* Payment Info */}
-                <div style={{ borderTop: '1px dashed #ccc', margin: '8px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                  <span>Bayar via</span>
-                  <span style={{ fontWeight: '600' }}>{receiptData.paymentMethod || 'Cash'}</span>
-                </div>
-                {receiptData.amountPaid > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                    <span>Diterima</span>
-                    <span>{formatCurrency(receiptData.amountPaid)}</span>
-                  </div>
-                )}
-                {receiptData.amountPaid > receiptData.finalPrice && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontWeight: '600', color: '#16a34a' }}>
-                    <span>Kembalian</span>
-                    <span>{formatCurrency(receiptData.amountPaid - receiptData.finalPrice)}</span>
-                  </div>
-                )}
-
-                <div style={{ borderTop: '2px dashed #ccc', margin: '8px 0' }} />
-
-                <div style={{ textAlign: 'center', fontSize: '11px', color: '#888', marginTop: '12px' }}>
-                  Terima kasih sudah berkunjung! <br />
-                  Selamat menikmati CaptGrill! <br />
-                  Follow IG: @captgrill.id <br />
-                  *Powered by Mahasiswa Sistem Informasi Unsri <br />
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setReceiptData(null)}>Tutup</button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
