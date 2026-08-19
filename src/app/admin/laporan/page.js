@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 
@@ -30,6 +30,7 @@ export default function LaporanPage() {
   const [txPage, setTxPage] = useState(1);
   const [exPage, setExPage] = useState(1);
   const [shiftFilter, setShiftFilter] = useState('Semua');
+
 
   const fetchReport = async () => {
     setLoading(true);
@@ -94,6 +95,8 @@ export default function LaporanPage() {
     XLSX.writeFile(wb, `Laporan_CaptGrill_${from}_sd_${to}.xlsx`);
   };
 
+
+
   const txTotalPages = Math.ceil(filteredTransactions.length / PAGE_SIZE);
   const exTotalPages = data ? Math.ceil((data.expenses?.length || 0) / PAGE_SIZE) : 0;
   const paginatedTx = filteredTransactions.slice((txPage - 1) * PAGE_SIZE, txPage * PAGE_SIZE);
@@ -142,7 +145,7 @@ export default function LaporanPage() {
       {data && (
         <>
           {/* Main Summary */}
-          <div className="summary-grid">
+          <div className="summary-grid summary-grid-1col-mobile">
             <div className="summary-card">
               <div className="summary-card-icon green">💰</div>
               <div className="summary-card-info">

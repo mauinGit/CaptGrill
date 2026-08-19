@@ -19,11 +19,9 @@ const adminLinks = [
   { href: '/admin/menu', icon: '🍔', label: 'Manajemen Menu' },
   { href: '/admin/pengeluaran', icon: '💸', label: 'Pengeluaran' },
   { href: '/admin/laporan', icon: '📋', label: 'Laporan' },
-  { href: '/admin/grafik', icon: '📈', label: 'Grafik Keuangan' },
   { href: '/admin/absensi', icon: '📅', label: 'Absensi Karyawan' },
   { href: '/admin/gaji', icon: '💰', label: 'Gaji Karyawan' },
   { href: '/admin/akun', icon: '👤', label: 'Manajemen Akun' },
-  { href: '/admin/log', icon: '📝', label: 'Log Aktivitas' },
 ];
 
 const kasirLinks = [
@@ -94,13 +92,13 @@ export default function Sidebar({ role, userName }) {
           <div className="sidebar-brand-icon"><img src="/assets/logo.png" alt="CaptGrill" onError={(e) => { e.target.style.display='none'; e.target.parentElement.textContent='🔥'; }} /></div>
           <div>
             <h1>CaptGrill</h1>
-            <span>{role === 'ADMIN' ? 'Admin Panel' : 'Kasir Panel'}</span>
+            <span style={{ opacity: 0.55 }}>{role === 'ADMIN' ? 'Admin Panel' : 'Kasir Panel'}</span>
           </div>
         </div>
 
         <nav className="sidebar-nav">
           <div className="sidebar-section">
-            <div className="sidebar-section-title">Menu</div>
+            <div className="sidebar-section-title" style={{ textTransform: 'uppercase', letterSpacing: '0.6px', opacity: 0.4, fontSize: '10.5px' }}>Menu</div>
             {links.map((link) => (
               <Link
                 key={link.href}
@@ -194,8 +192,8 @@ export default function Sidebar({ role, userName }) {
                 {userName?.charAt(0)?.toUpperCase() || '?'}
               </div>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: '#e2e8f0' }}>{userName}</div>
-                <div style={{ fontSize: '11px', color: '#ffffff' }}>{role}</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'rgba(255,255,255,0.9)' }}>{userName}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{role}</div>
               </div>
             </div>
             <button

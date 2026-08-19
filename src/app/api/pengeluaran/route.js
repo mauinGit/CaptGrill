@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
+import { syncExpenseToSheet } from '@/lib/googleSheets';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -64,6 +65,9 @@ export async function POST(request) {
         },
       });
     }
+
+    // Sync ke Google Sheets (background, non-blocking)
+    syncExpenseToSheet(expense);
 
     return apiResponse(expense, 201);
   } catch (error) {

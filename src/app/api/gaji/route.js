@@ -28,11 +28,11 @@ export async function GET(request) {
   }
 }
 
-// Calculate & create salary with 2 components: Shift + Produksi Bahan
+// Calculate & create salary with 3 components: Shift + Produksi + Bonus
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { userId, period, shiftRate, produksiRate } = body;
+    const { userId, period, shiftRate, produksiRate, bonus, bonusNote } = body;
 
     if (!userId || !period) {
       return apiError('userId dan period harus diisi', 400);
@@ -43,7 +43,6 @@ export async function POST(request) {
       return apiError('userId tidak valid', 400);
     }
 
-    // Validate user exists
     const userExists = await prisma.user.findUnique({ where: { id: parsedUserId } });
     if (!userExists) {
       return apiError('Karyawan tidak ditemukan', 404);
@@ -51,12 +50,12 @@ export async function POST(request) {
 
     const parsedShiftRate = parseInt(shiftRate) || 0;
     const parsedProduksiRate = parseInt(produksiRate) || 0;
+    const parsedBonus = parseInt(bonus) || 0;
 
     if (parsedShiftRate === 0 && parsedProduksiRate === 0) {
       return apiError('Minimal satu rate gaji harus diisi', 400);
     }
 
-    // Parse period (format: "2024-01")
     const [year, month] = period.split('-').map(Number);
     if (!year || !month) {
       return apiError('Format periode tidak valid (gunakan YYYY-MM)', 400);
@@ -67,53 +66,39 @@ export async function POST(request) {
     const dateFilter = {
       userId: parsedUserId,
       date: { gte: startDate, lte: endDate },
+      status: 'VALID',
     };
 
-    // Count shift attendance (Shift 1 + Shift 2)
     const shiftDays = await prisma.attendance.count({
       where: {
         ...dateFilter,
-        OR: [
-          { purpose: 'Shift 1' },
-          { purpose: 'Shift 2' },
-          { purpose: null },
-        ],
+        OR: [{ purpose: 'Shift 1' }, { purpose: 'Shift 2' }, { purpose: null }],
       },
     });
 
-    // Count production attendance (Membuat Bahan)
     const produksiDays = await prisma.attendance.count({
       where: {
         ...dateFilter,
-        purpose: 'Membuat Bahan',
+        OR: [{ purpose: 'Membuat Bahan' }, { purpose: 'Buat Bahan' }],
       },
     });
 
     const gajiShift = shiftDays * parsedShiftRate;
     const gajiProduksi = produksiDays * parsedProduksiRate;
-    const totalSalary = gajiShift + gajiProduksi;
+    const totalSalary = gajiShift + gajiProduksi + parsedBonus;
     const totalDays = shiftDays + produksiDays;
-
-    // Use shiftRate as dailyRate for backward compatibility
     const dailyRate = parsedShiftRate || parsedProduksiRate;
 
     const salary = await prisma.salary.create({
       data: {
         userId: parsedUserId,
-        period,
-        totalDays,
-        dailyRate,
-        totalSalary,
-        shiftDays,
-        shiftRate: parsedShiftRate,
-        gajiShift,
-        produksiDays,
-        produksiRate: parsedProduksiRate,
-        gajiProduksi,
+        period, totalDays, dailyRate, totalSalary,
+        shiftDays, shiftRate: parsedShiftRate, gajiShift,
+        produksiDays, produksiRate: parsedProduksiRate, gajiProduksi,
+        bonus: parsedBonus, bonusNote: bonusNote || null,
+        status: 'DRAFT',
       },
-      include: {
-        user: { select: { name: true } },
-      },
+      include: { user: { select: { name: true } } },
     });
 
     const reqUserId = request.headers.get('x-user-id');
@@ -122,7 +107,7 @@ export async function POST(request) {
         data: {
           userId: parseInt(reqUserId),
           action: 'CREATE_SALARY',
-          detail: `Menghitung gaji ${salary.user.name} periode ${period}: Shift=${shiftDays}x${parsedShiftRate}, Produksi=${produksiDays}x${parsedProduksiRate}, Total=Rp${totalSalary}`,
+          detail: `Menghitung gaji ${salary.user.name} periode ${period}: Total=Rp${totalSalary}`,
         },
       });
     }

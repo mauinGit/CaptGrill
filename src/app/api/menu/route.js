@@ -4,7 +4,7 @@ import { apiResponse, apiError } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// GET all menus with ingredients
+// GET all menus with ingredients + stock availability
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -24,12 +24,29 @@ export async function GET(request) {
       orderBy: { name: 'asc' },
     });
 
-    return apiResponse(menus);
+    // Compute isStockSufficient for each menu (spec §7.3)
+    const menusWithStock = menus.map((menu) => {
+      let isStockSufficient = true;
+      if (menu.menuIngredients && menu.menuIngredients.length > 0) {
+        for (const mi of menu.menuIngredients) {
+          const currentStock = parseFloat(mi.ingredient?.stock ?? 0);
+          const needed = parseFloat(mi.quantity ?? 0);
+          if (currentStock < needed) {
+            isStockSufficient = false;
+            break;
+          }
+        }
+      }
+      return { ...menu, isStockSufficient };
+    });
+
+    return apiResponse(menusWithStock);
   } catch (error) {
     console.error('Get menus error:', error);
     return apiError('Gagal mengambil data menu', 500);
   }
 }
+
 
 // CREATE menu
 export async function POST(request) {

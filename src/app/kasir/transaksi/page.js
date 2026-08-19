@@ -15,7 +15,7 @@ export default function TransaksiPage() {
   const [discount, setDiscount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState('Makanan');
   const [showConfirm, setShowConfirm] = useState(false);
   const [amountPaid, setAmountPaid] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Cash');
@@ -120,7 +120,6 @@ export default function TransaksiPage() {
   };
 
   const filteredMenus = menus.filter((m) => {
-    if (filter === '') return true;
     return m.category === filter;
   });
 
@@ -152,7 +151,6 @@ export default function TransaksiPage() {
         {/* Menu Grid */}
         <div>
           <div className="btn-group" style={{ marginBottom: '16px' }}>
-            <button className={`btn ${filter === '' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('')}>Semua</button>
             <button className={`btn ${filter === 'Makanan' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('Makanan')}>🍔 Makanan</button>
             <button className={`btn ${filter === 'Minuman' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('Minuman')}>🥤 Minuman</button>
             <button className={`btn ${filter === 'Snack' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('Snack')}>🍟 Snack</button>
@@ -162,31 +160,47 @@ export default function TransaksiPage() {
             <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat menu...</p></div>
           ) : (
             <div className="pos-menu-grid">
-              {filteredMenus.map((menu) => (
-                <div
-                  key={menu.id}
-                  className="pos-menu-item"
-                  onClick={() => addToCart(menu)}
-                >
-                  {menu.image ? (
-                    <div className="pos-menu-img">
-                      <img src={menu.image} alt={menu.name} />
-                    </div>
-                  ) : (
-                    <div className="pos-menu-icon">
-                      {menu.category === 'Minuman' ? '🥤' : menu.category === 'Snack' ? '🍟' : '🍔'}
-                    </div>
-                  )}
-                  <div className="pos-menu-name">{menu.name}</div>
-                  <div className="pos-menu-price">{formatCurrency(menu.price)}</div>
-                </div>
-              ))}
+              {filteredMenus.map((menu) => {
+                const outOfStock = menu.isStockSufficient === false;
+                return (
+                  <div
+                    key={menu.id}
+                    className="pos-menu-item"
+                    onClick={() => !outOfStock && addToCart(menu)}
+                    style={{
+                      opacity: outOfStock ? 0.5 : 1,
+                      cursor: outOfStock ? 'not-allowed' : 'pointer',
+                      position: 'relative',
+                    }}
+                  >
+                    {outOfStock && (
+                      <div style={{
+                        position: 'absolute', top: '6px', right: '6px',
+                        background: 'var(--danger)', color: '#fff',
+                        fontSize: '9px', fontWeight: '700', padding: '2px 6px',
+                        borderRadius: '8px', zIndex: 1,
+                      }}>Habis</div>
+                    )}
+                    {menu.image ? (
+                      <div className="pos-menu-img">
+                        <img src={menu.image} alt={menu.name} style={{ filter: outOfStock ? 'grayscale(0.6)' : 'none' }} />
+                      </div>
+                    ) : (
+                      <div className="pos-menu-icon">
+                        {menu.category === 'Minuman' ? '🥤' : menu.category === 'Snack' ? '🍟' : '🍔'}
+                      </div>
+                    )}
+                    <div className="pos-menu-name">{menu.name}</div>
+                    <div className="pos-menu-price">{formatCurrency(menu.price)}</div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Cart */}
-        <div className="pos-cart">
+        {/* Cart for Tablet & Laptop (>= 768px) */}
+        <div className="pos-cart pos-cart-desktop hide-mobile">
           <div className="pos-cart-header">
             <h3>🧾 Pesanan</h3>
             {cart.length > 0 && (
@@ -255,6 +269,30 @@ export default function TransaksiPage() {
           )}
         </div>
       </div>
+
+      {/* Floating Cart Bar for Mobile HP (< 768px) */}
+      {cart.length > 0 && (
+        <div className="cart-float-bar show-mobile" onClick={() => setShowConfirm(true)}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              background: 'var(--primary)', color: '#fff',
+              width: '32px', height: '32px', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: '800', fontSize: '14px',
+            }}>
+              {cart.reduce((s, c) => s + c.quantity, 0)}
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Total Pesanan</div>
+              <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--primary)' }}>{formatCurrency(finalPrice)}</div>
+            </div>
+          </div>
+          <button className="btn btn-primary btn-sm" style={{ padding: '8px 16px' }}>
+            Lihat & Bayar →
+          </button>
+        </div>
+      )}
+
 
       {/* Confirmation Modal with Payment */}
       {showConfirm && (

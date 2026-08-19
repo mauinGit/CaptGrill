@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
+import AdminBottomTabBar from '@/components/AdminBottomTabBar';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/Toast';
 
@@ -45,7 +46,9 @@ export default function AdminLayout({ children }) {
     <ThemeProvider>
       <ToastProvider>
         <div className="app-layout">
+          {/* Sidebar — only visible on ≥1024px (CSS controlled) */}
           <Sidebar role="ADMIN" userName={user.name} />
+
           <main className="main-content animate-fade-in">
             {user.isDemo && (
               <div style={{
@@ -67,6 +70,9 @@ export default function AdminLayout({ children }) {
             )}
             {children}
           </main>
+
+          {/* Admin Bottom Tab Bar — only visible on <1024px (CSS controlled) */}
+          <AdminBottomTabBar />
         </div>
       </ToastProvider>
     </ThemeProvider>

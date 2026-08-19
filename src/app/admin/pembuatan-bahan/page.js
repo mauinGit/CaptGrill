@@ -61,6 +61,10 @@ export default function PembuatanBahanPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.ingredientId) {
+      toast.error('Pilih bahan hasil produksi yang valid dari daftar');
+      return;
+    }
     const url = editItem ? `/api/resep/${editItem.id}` : '/api/resep';
     const method = editItem ? 'PUT' : 'POST';
 
@@ -97,6 +101,124 @@ export default function PembuatanBahanPage() {
     }
   };
 
+  const renderFormFields = () => (
+    <>
+      <div className="form-group">
+        <label className="form-label">Nama Resep *</label>
+        <input
+          type="text"
+          className="form-input"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          required
+          placeholder="Contoh: Patty"
+        />
+        <small style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Nama untuk mengidentifikasi resep ini</small>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Bahan Hasil Produksi *</label>
+        <input
+          type="text"
+          className="form-input"
+          list="result-ingredients-list"
+          placeholder="🔍 Ketik atau pilih bahan hasil..."
+          value={
+            ingredients.find((i) => i.id.toString() === form.ingredientId)?.name ||
+            form.ingredientSearch ||
+            ''
+          }
+          onChange={(e) => {
+            const val = e.target.value;
+            const ing = ingredients.find(
+              (i) => i.name.toLowerCase() === val.toLowerCase()
+            );
+            setForm((prev) => ({
+              ...prev,
+              ingredientSearch: val,
+              ingredientId: ing ? ing.id.toString() : '',
+              name: prev.name || (ing ? ing.name : prev.name),
+            }));
+          }}
+          disabled={!!editItem}
+          required
+        />
+        <datalist id="result-ingredients-list">
+          {ingredients.map((ing) => (
+            <option key={ing.id} value={ing.name}>
+              {ing.name} ({ing.unit})
+            </option>
+          ))}
+        </datalist>
+        <small style={{ color: 'var(--text-tertiary)', fontSize: '11px', marginTop: '4px', display: 'block' }}>
+          {editItem ? '🔒 Bahan hasil tidak bisa diubah saat edit' : '💡 Ketik nama bahan untuk mencari tanpa perlu scroll panjang'}
+        </small>
+      </div>
+
+      <div style={{ marginTop: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <label className="form-label" style={{ margin: 0 }}>Komposisi Bahan Dasar</label>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={addComposition}>➕ Tambah Bahan</button>
+        </div>
+        {form.compositions.length === 0 && (
+          <p style={{ color: 'var(--text-tertiary)', fontSize: '12px', textAlign: 'center', padding: '16px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
+            Belum ada komposisi. Klik &quot;Tambah Bahan&quot; untuk menambahkan bahan dasar.
+          </p>
+        )}
+        {form.compositions.map((comp, index) => {
+          const currentIng = ingredients.find((i) => i.id.toString() === comp.ingredientId);
+          return (
+            <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+              <div style={{ flex: 2, position: 'relative' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  list={`comp-list-${index}`}
+                  placeholder="🔍 Ketik bahan dasar..."
+                  value={currentIng?.name || comp.searchName || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const ing = ingredients.find(
+                      (i) => i.name.toLowerCase() === val.toLowerCase()
+                    );
+                    updateComposition(index, 'ingredientId', ing ? ing.id.toString() : '');
+                    updateComposition(index, 'searchName', val);
+                  }}
+                  required
+                />
+                <datalist id={`comp-list-${index}`}>
+                  {ingredients.map((ing) => (
+                    <option key={ing.id} value={ing.name}>
+                      {ing.name} ({ing.unit})
+                    </option>
+                  ))}
+                </datalist>
+              </div>
+              <input
+                type="number"
+                step="0.01"
+                className="form-input"
+                value={comp.quantity}
+                onChange={(e) => updateComposition(index, 'quantity', e.target.value)}
+                placeholder="Jumlah"
+                style={{ flex: 1 }}
+                required
+              />
+              <button
+                type="button"
+                className="btn btn-danger btn-sm icon-btn"
+                onClick={() => removeComposition(index)}
+                title="Hapus bahan dasar"
+              >
+                ✕
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+
   return (
     <div className="animate-fade-in">
       <div className="navbar">
@@ -106,6 +228,7 @@ export default function PembuatanBahanPage() {
         </div>
       </div>
 
+      {/* Toolbar */}
       <div className="toolbar">
         <div className="toolbar-left">
           <div className="search-box" style={{ maxWidth: '320px', width: '100%' }}>
@@ -121,11 +244,12 @@ export default function PembuatanBahanPage() {
           </div>
         </div>
         <div className="toolbar-right">
-          <button className="btn btn-primary" onClick={openAdd}>➕ Tambah Resep</button>
+          <button className="btn btn-primary hide-mobile" onClick={openAdd}>➕ Tambah Resep</button>
         </div>
       </div>
 
-      <div className="card">
+      {/* Table view for Tablet & Laptop (>= 768px) */}
+      <div className="card hide-mobile">
         {loading ? (
           <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat data...</p></div>
         ) : recipes.length === 0 ? (
@@ -136,7 +260,7 @@ export default function PembuatanBahanPage() {
               <thead>
                 <tr>
                   <th>No</th>
-                  <th>Nama Bahan</th>
+                  <th>Nama Resep</th>
                   <th>Bahan Hasil</th>
                   <th>Komposisi Bahan Dasar</th>
                   <th>Aksi</th>
@@ -155,7 +279,7 @@ export default function PembuatanBahanPage() {
                     <td style={{ fontSize: '12px', maxWidth: '300px' }}>
                       {item.compositions?.map((c) => (
                         <span key={c.id} style={{ display: 'inline-block', background: 'var(--bg-tertiary)', padding: '2px 8px', borderRadius: '4px', margin: '2px', fontSize: '11px' }}>
-                          {c.ingredient.name}: {c.quantity} {c.ingredient.unit}
+                          {c.ingredient?.name}: {c.quantity} {c.ingredient?.unit}
                         </span>
                       ))}
                     </td>
@@ -173,68 +297,125 @@ export default function PembuatanBahanPage() {
         )}
       </div>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editItem ? 'Edit Resep' : 'Tambah Resep'} size="lg">
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <div className="form-group">
-              <label className="form-label">Nama Resep</label>
-              <input
-                type="text"
-                className="form-input"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-                placeholder="Contoh: Patty"
-              />
-              <small style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Nama untuk mengidentifikasi resep ini</small>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Bahan Hasil Produksi</label>
-              <select
-                className="form-select"
-                value={form.ingredientId}
-                onChange={(e) => setForm({ ...form, ingredientId: e.target.value })}
-                required
-              >
-                <option value="">Pilih bahan hasil</option>
-                {ingredients.map((ing) => (
-                  <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
-                ))}
-              </select>
-              <small style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Bahan yang dihasilkan dari resep ini (sudah terdaftar di Manajemen Bahan)</small>
-            </div>
-
-            <div style={{ marginTop: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <label className="form-label" style={{ margin: 0 }}>Komposisi Bahan Dasar</label>
-                <button type="button" className="btn btn-secondary btn-sm" onClick={addComposition}>➕ Tambah Bahan</button>
-              </div>
-              {form.compositions.length === 0 && (
-                <p style={{ color: 'var(--text-tertiary)', fontSize: '12px', textAlign: 'center', padding: '16px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
-                  Belum ada komposisi. Klik &quot;Tambah Bahan&quot; untuk menambahkan bahan dasar.
-                </p>
-              )}
-              {form.compositions.map((comp, index) => (
-                <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-                  <select className="form-select" value={comp.ingredientId} onChange={(e) => updateComposition(index, 'ingredientId', e.target.value)} style={{ flex: 2 }}>
-                    <option value="">Pilih bahan</option>
-                    {ingredients.map((ing) => (
-                      <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
-                    ))}
-                  </select>
-                  <input type="number" step="0.1" className="form-input" value={comp.quantity} onChange={(e) => updateComposition(index, 'quantity', e.target.value)} placeholder="Jumlah" style={{ flex: 1 }} />
-                  <button type="button" className="btn btn-danger btn-sm btn-icon" onClick={() => removeComposition(index)}>✕</button>
+      {/* Card list view for HP (< 768px) */}
+      <div className="show-mobile">
+        {loading ? (
+          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat data...</p></div>
+        ) : recipes.length === 0 ? (
+          <div className="empty-state"><div className="empty-state-icon">🧪</div><p>Belum ada resep pembuatan bahan</p></div>
+        ) : (
+          <div className="mobile-card-list">
+            {recipes.map((item) => (
+              <div key={item.id} className="mobile-card">
+                <div className="mobile-card-header">
+                  <div className="mobile-card-title">{item.name}</div>
+                  <span className="badge badge-success" style={{ fontSize: '11px' }}>
+                    → {item.ingredient?.name}
+                  </span>
                 </div>
-              ))}
+                <div className="mobile-card-body">
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                    {item.compositions?.map((c) => (
+                      <span key={c.id} style={{ background: 'var(--bg-tertiary)', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                        {c.ingredient?.name}: {c.quantity} {c.ingredient?.unit}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="mobile-card-footer">
+                  <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Hasil: {item.ingredient?.unit}</span>
+                  <div className="btn-group">
+                    <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}>✏️ Edit</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>🗑️ Hapus</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* FAB Button for HP (< 768px) */}
+      <button className="fab-btn" onClick={openAdd} title="Tambah Resep">
+        +
+      </button>
+
+      {/* Forms rendering per device strategy */}
+      {modalOpen && !editItem && (
+        <>
+          {/* HP Full Screen Page (< 768px) */}
+          <div className="show-mobile">
+            <div className="full-screen-page-overlay">
+              <div className="full-screen-page-header">
+                <button className="btn btn-secondary btn-sm" onClick={() => setModalOpen(false)}>← Kembali</button>
+                <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Tambah Resep Baru</h3>
+                <div style={{ width: '60px' }} />
+              </div>
+              <div className="full-screen-page-body">
+                <form id="recipe-form-hp" onSubmit={handleSubmit}>
+                  {renderFormFields()}
+                </form>
+              </div>
+              <div className="full-screen-page-footer">
+                <button type="submit" form="recipe-form-hp" className="btn btn-primary w-full" style={{ padding: '12px' }}>
+                  Simpan Resep
+                </button>
+              </div>
             </div>
           </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Batal</button>
-            <button type="submit" className="btn btn-primary">{editItem ? 'Update' : 'Simpan'}</button>
+
+          {/* Tablet Side Panel Drawer (768px - 1023px) */}
+          <div className="show-tablet">
+            <div className="side-panel-overlay" onClick={() => setModalOpen(false)}>
+              <div className="side-panel" onClick={(e) => e.stopPropagation()}>
+                <div className="side-panel-header">
+                  <h3 style={{ fontSize: '16px', fontWeight: '700' }}>➕ Tambah Resep Baru</h3>
+                  <button className="modal-close" onClick={() => setModalOpen(false)}>✕</button>
+                </div>
+                <div className="side-panel-body">
+                  <form id="recipe-form-tablet" onSubmit={handleSubmit}>
+                    {renderFormFields()}
+                  </form>
+                </div>
+                <div className="side-panel-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Batal</button>
+                  <button type="submit" form="recipe-form-tablet" className="btn btn-primary">Simpan Resep</button>
+                </div>
+              </div>
+            </div>
           </div>
-        </form>
-      </Modal>
+
+          {/* Laptop Modal Dialog (>= 1024px) */}
+          <div className="hide-mobile hide-tablet">
+            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="➕ Tambah Resep Baru" size="lg">
+              <form onSubmit={handleSubmit}>
+                <div className="modal-body">
+                  {renderFormFields()}
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Batal</button>
+                  <button type="submit" className="btn btn-primary">Simpan</button>
+                </div>
+              </form>
+            </Modal>
+          </div>
+        </>
+      )}
+
+      {/* Edit Modal (Dialog for all devices) */}
+      {modalOpen && editItem && (
+        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="✏️ Edit Resep" size="lg">
+          <form onSubmit={handleSubmit}>
+            <div className="modal-body">
+              {renderFormFields()}
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Batal</button>
+              <button type="submit" className="btn btn-primary">Update</button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }

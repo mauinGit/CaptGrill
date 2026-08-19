@@ -1,21 +1,21 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 
-// UPDATE ingredient
+// UPDATE ingredient data (name, unit, minStock, category — NO stock field)
 export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, unit, stock, minStock, category } = body;
+    const { name, unit, minStock, category } = body;
 
     const ingredient = await prisma.ingredient.update({
       where: { id: parseInt(id) },
       data: {
         ...(name && { name }),
         ...(unit && { unit }),
-        ...(stock !== undefined && { stock: parseFloat(stock) }),
         ...(minStock !== undefined && { minStock: parseFloat(minStock) }),
         ...(category !== undefined && { category: category || null }),
+        // NOTE: stock is intentionally NOT updated here — use PATCH for restock
       },
     });
 
@@ -25,7 +25,7 @@ export async function PUT(request, { params }) {
         data: {
           userId: parseInt(userId),
           action: 'UPDATE_INGREDIENT',
-          detail: `Mengupdate bahan: ${ingredient.name}`,
+          detail: `Mengupdate data bahan: ${ingredient.name}`,
         },
       });
     }
@@ -34,6 +34,45 @@ export async function PUT(request, { params }) {
   } catch (error) {
     console.error('Update ingredient error:', error);
     return apiError('Gagal mengupdate bahan', 500);
+  }
+}
+
+// RESTOCK ingredient — adds to existing stock (not replace)
+export async function PATCH(request, { params }) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const { addStock } = body;
+
+    if (addStock === undefined || isNaN(parseFloat(addStock)) || parseFloat(addStock) <= 0) {
+      return apiError('Jumlah tambah stok harus lebih dari 0', 400);
+    }
+
+    const current = await prisma.ingredient.findUnique({ where: { id: parseInt(id) } });
+    if (!current) return apiError('Bahan tidak ditemukan', 404);
+
+    const newStock = parseFloat(current.stock) + parseFloat(addStock);
+
+    const ingredient = await prisma.ingredient.update({
+      where: { id: parseInt(id) },
+      data: { stock: newStock },
+    });
+
+    const userId = request.headers.get('x-user-id');
+    if (userId) {
+      await prisma.log.create({
+        data: {
+          userId: parseInt(userId),
+          action: 'RESTOCK_INGREDIENT',
+          detail: `Restock bahan: ${ingredient.name} +${addStock} ${ingredient.unit} (total: ${newStock} ${ingredient.unit})`,
+        },
+      });
+    }
+
+    return apiResponse(ingredient);
+  } catch (error) {
+    console.error('Restock ingredient error:', error);
+    return apiError('Gagal melakukan restock', 500);
   }
 }
 
