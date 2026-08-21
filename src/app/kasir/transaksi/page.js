@@ -320,8 +320,30 @@ export default function TransaksiPage() {
                 <span className="font-bold text-primary">{formatCurrency(finalPrice)}</span>
               </div>
 
+              {/* Discount Input */}
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <label className="form-label">Diskon (Rp)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={discount || ''}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                    const val = parseInt(raw) || 0;
+                    setDiscount(val);
+                  }}
+                  min="0"
+                  placeholder="0"
+                />
+                {discount > totalPrice && (
+                  <small style={{ color: 'var(--danger)', fontSize: '11px' }}>
+                    ⚠️ Diskon melebihi subtotal, di-cap ke {formatCurrency(totalPrice)}
+                  </small>
+                )}
+              </div>
+
               {/* Payment Method */}
-              <div className="form-group" style={{ marginTop: '16px' }}>
+              <div className="form-group">
                 <label className="form-label">Metode Pembayaran</label>
                 <select className="form-select" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
                   {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}

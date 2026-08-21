@@ -8,6 +8,7 @@ import Modal from '@/components/Modal';
 export default function AbsensiAdminPage() {
   const toast = useToast();
   const [attendances, setAttendances] = useState([]);
+  const [search, setSearch] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,12 @@ export default function AbsensiAdminPage() {
   };
 
   useEffect(() => { fetchData(); }, [from, to]);
+
+  const filteredAttendances = attendances.filter((a) => {
+    if (!search.trim()) return true;
+    const name = a.user?.name || a.userName || '';
+    return name.toLowerCase().includes(search.toLowerCase());
+  });
 
   const openRejectModal = (attendance) => {
     setRejectTarget(attendance);
@@ -71,28 +78,22 @@ export default function AbsensiAdminPage() {
         </div>
       </div>
 
-      {/* Filter */}
-      <div className="toolbar">
-        <div className="toolbar-left" style={{ gap: '8px', flexWrap: 'wrap' }}>
-          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', alignSelf: 'center' }}>Dari:</label>
-          <input type="date" className="form-input" value={from} onChange={(e) => setFrom(e.target.value)} style={{ maxWidth: '160px' }} />
-          <label style={{ fontSize: '13px', color: 'var(--text-secondary)', alignSelf: 'center' }}>Sampai:</label>
-          <input type="date" className="form-input" value={to} onChange={(e) => setTo(e.target.value)} style={{ maxWidth: '160px' }} />
-          {(from || to) && (
-            <button className="btn btn-secondary btn-sm" onClick={() => { setFrom(''); setTo(''); }}>✕ Reset</button>
-          )}
+      {/* Filter & Search */}
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <div className="search-box" style={{ width: '100%', marginBottom: '12px' }}>
+          <span className="search-box-icon">🔍</span>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Cari nama karyawan..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ paddingLeft: '40px' }}
+          />
         </div>
-        <div className="toolbar-right">
-          <div style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
-              Valid
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)', display: 'inline-block' }} />
-              Ditolak
-            </span>
-          </div>
+        <div className="date-range-row">
+          <input type="date" className="form-input date-input" value={from} onChange={(e) => setFrom(e.target.value)} />
+          <input type="date" className="form-input date-input" value={to} onChange={(e) => setTo(e.target.value)} />
         </div>
       </div>
 
@@ -100,7 +101,7 @@ export default function AbsensiAdminPage() {
       <div className="card hide-mobile">
         {loading ? (
           <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
-        ) : attendances.length === 0 ? (
+        ) : filteredAttendances.length === 0 ? (
           <div className="empty-state"><div className="empty-state-icon">📭</div><p>Belum ada data absensi</p></div>
         ) : (
           <div className="table-container">
@@ -119,7 +120,7 @@ export default function AbsensiAdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {attendances.map((a) => {
+                {filteredAttendances.map((a) => {
                   const isDitolak = a.status === 'DITOLAK';
                   return (
                     <tr
@@ -157,20 +158,20 @@ export default function AbsensiAdminPage() {
                       {/* Tujuan */}
                       <td>
                         <span className={`badge ${purposeColors[a.purpose] || 'badge-secondary'}`} style={{ fontSize: '11px' }}>
-                          {a.purpose === 'Shift 1' ? '🌅' : a.purpose === 'Shift 2' ? '🌙' : '🧪'} {a.purpose || 'Shift 1'}
+                          {a.purpose}
                         </span>
                       </td>
 
                       {/* Jam Masuk */}
-                      <td style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      <td style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-secondary)' }}>
                         {a.clockIn ? new Date(a.clockIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '—'}
                       </td>
 
                       {/* Jam Keluar */}
-                      <td style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                      <td style={{ fontWeight: '600', fontSize: '13px', color: a.clockOut ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                         {a.clockOut
                           ? new Date(a.clockOut).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-                          : <span style={{ color: 'var(--text-tertiary)' }}>—</span>}
+                          : '—'}
                       </td>
 
                       {/* Foto */}
@@ -240,11 +241,11 @@ export default function AbsensiAdminPage() {
       <div className="show-mobile">
         {loading ? (
           <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
-        ) : attendances.length === 0 ? (
+        ) : filteredAttendances.length === 0 ? (
           <div className="empty-state"><div className="empty-state-icon">📭</div><p>Belum ada data absensi</p></div>
         ) : (
           <div className="mobile-card-list">
-            {attendances.map((a) => {
+            {filteredAttendances.map((a) => {
               const isDitolak = a.status === 'DITOLAK';
               return (
                 <div key={a.id} className="mobile-card" style={{ opacity: isDitolak ? 0.7 : 1, background: isDitolak ? 'rgba(239,68,68,0.03)' : undefined }}>

@@ -1940,6 +1940,121 @@ tbody tr:last-child td {
   border-radius: 6px !important;
 }
 
+/* Date Range Row & Action Row */
+.date-range-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.date-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.date-separator {
+  color: var(--text-tertiary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.action-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.action-row button,
+.action-row .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+/* Account Card List (Mobile) */
+.acc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.acc-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.acc-card:active {
+  background: var(--bg-tertiary);
+}
+
+.acc-card.inactive {
+  opacity: 0.55;
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.acc-card .avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--primary-glow);
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(35, 114, 39, 0.2);
+}
+
+.acc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.acc-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.acc-user {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.acc-rates {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.acc-card .kebab {
+  font-size: 18px;
+  color: var(--text-tertiary);
+  padding: 4px 8px;
+  flex-shrink: 0;
+}
+
+.fab-tambah-akun {
+  position: fixed;
+  right: 16px;
+  bottom: 78px;
+  z-index: 40;
+}
+
 /* Chip "+ Baru" Styling */
 .chip-add-new {
   background: var(--bg-card);

@@ -2,16 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
+import Modal from '@/components/Modal';
 import * as XLSX from 'xlsx';
 
 const PAGE_SIZE = 10;
-
-const PAYMENT_ICONS = {
-  Cash: '💵',
-  Grab: '🟢',
-  QRIS: '📱',
-  GoFood: '🟠',
-};
 
 // Shift time helper: Shift 1 = 06:00-15:00, Shift 2 = 15:00-06:00 (next day)
 function getTransactionShift(createdAt) {
@@ -27,17 +21,15 @@ export default function LaporanPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
+  const [detailModalItem, setDetailModalItem] = useState(null);
   const [txPage, setTxPage] = useState(1);
-  const [exPage, setExPage] = useState(1);
   const [shiftFilter, setShiftFilter] = useState('Semua');
-
 
   const fetchReport = async () => {
     setLoading(true);
     const res = await fetch(`/api/laporan?from=${from}&to=${to}`);
     setData(await res.json());
     setTxPage(1);
-    setExPage(1);
     setShiftFilter('Semua');
     setLoading(false);
   };
@@ -95,12 +87,8 @@ export default function LaporanPage() {
     XLSX.writeFile(wb, `Laporan_CaptGrill_${from}_sd_${to}.xlsx`);
   };
 
-
-
   const txTotalPages = Math.ceil(filteredTransactions.length / PAGE_SIZE);
-  const exTotalPages = data ? Math.ceil((data.expenses?.length || 0) / PAGE_SIZE) : 0;
   const paginatedTx = filteredTransactions.slice((txPage - 1) * PAGE_SIZE, txPage * PAGE_SIZE);
-  const paginatedEx = data?.expenses?.slice((exPage - 1) * PAGE_SIZE, exPage * PAGE_SIZE) || [];
 
   const Pagination = ({ current, total, onChange }) => (
     total > 1 && (
@@ -124,21 +112,17 @@ export default function LaporanPage() {
       </div>
 
       <div className="card" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'end', flexWrap: 'wrap' }}>
-          <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '150px' }}>
-            <label className="form-label">Dari Tanggal</label>
-            <input type="date" className="form-input" value={from} onChange={(e) => setFrom(e.target.value)} />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '150px' }}>
-            <label className="form-label">Sampai Tanggal</label>
-            <input type="date" className="form-input" value={to} onChange={(e) => setTo(e.target.value)} />
-          </div>
+        <div className="date-range-row">
+          <input type="date" className="form-input date-input" value={from} onChange={(e) => setFrom(e.target.value)} />
+          <input type="date" className="form-input date-input" value={to} onChange={(e) => setTo(e.target.value)} />
+        </div>
+        <div className="action-row">
+          {data && (
+            <button className="btn btn-success btn-excel" onClick={exportToExcel}>Export Excel</button>
+          )}
           <button className="btn btn-primary" onClick={fetchReport} disabled={loading}>
             {loading ? '⏳' : '🔍'} Tampilkan
           </button>
-          {data && (
-            <button className="btn btn-success" onClick={exportToExcel}>📥 Export Excel</button>
-          )}
         </div>
       </div>
 
@@ -178,9 +162,6 @@ export default function LaporanPage() {
             <div className="summary-grid" style={{ marginTop: '12px' }}>
               {Object.entries(data.paymentBreakdown).map(([method, amount]) => (
                 <div className="summary-card" key={method}>
-                  <div className="summary-card-icon blue" style={{ fontSize: '24px' }}>
-                    {PAYMENT_ICONS[method] || '💳'}
-                  </div>
                   <div className="summary-card-info">
                     <h3>{method}</h3>
                     <div className="value" style={{ fontSize: '16px' }}>{formatCurrency(amount)}</div>
@@ -190,94 +171,191 @@ export default function LaporanPage() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-            <div className="card">
-              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                <h3 className="card-title">💰 Transaksi ({filteredTransactions.length}){shiftFilter !== 'Semua' ? ` — ${shiftFilter}` : ''}</h3>
-                <div className="btn-group">
-                  {['Semua', 'Shift 1', 'Shift 2'].map((s) => (
-                    <button
-                      key={s}
-                      className={`btn ${shiftFilter === s ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-                      onClick={() => { setShiftFilter(s); setTxPage(1); }}
-                    >
-                      {s === 'Shift 1' ? '🌅 ' : s === 'Shift 2' ? '🌙 ' : ''}{s}
-                    </button>
-                  ))}
-                </div>
+          {/* Transactions Table Card */}
+          <div className="card" style={{ marginTop: '20px' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <h3 className="card-title">💰 Transaksi ({filteredTransactions.length}){shiftFilter !== 'Semua' ? ` — ${shiftFilter}` : ''}</h3>
+              <div className="btn-group">
+                {['Semua', 'Shift 1', 'Shift 2'].map((s) => (
+                  <button
+                    key={s}
+                    className={`btn ${shiftFilter === s ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                    onClick={() => { setShiftFilter(s); setTxPage(1); }}
+                  >
+                    {s === 'Shift 1' ? '🌅 ' : s === 'Shift 2' ? '🌙 ' : ''}{s}
+                  </button>
+                ))}
               </div>
-
-              {shiftFilter !== 'Semua' && (
-                <div style={{ padding: '8px 16px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  {shiftFilter === 'Shift 1' ? '🌅 Shift 1: 06:00 — 15:00 WIB' : '🌙 Shift 2: 15:00 — 06:00 WIB'} • Total: <strong className="text-success">{formatCurrency(filteredIncome)}</strong>
-                </div>
-              )}
-
-              {filteredTransactions.length === 0 ? (
-                <p style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px' }}>Tidak ada transaksi</p>
-              ) : (
-                <>
-                  <div className="table-container">
-                    <table>
-                      <thead><tr><th>No Order</th><th>Waktu</th><th>Kasir</th><th>Via</th><th>Shift</th><th>Total</th><th>Struk</th></tr></thead>
-                      <tbody>
-                        {paginatedTx.map((t) => (
-                          <tr key={t.id}>
-                            <td style={{ fontSize: '11px', fontWeight: '600' }}>{t.orderNumber || `#${t.id}`}</td>
-                            <td style={{ fontSize: '12px' }}>{formatDateTime(t.createdAt)}</td>
-                            <td>{t.user?.name}</td>
-                            <td><span className="badge badge-info" style={{ fontSize: '10px' }}>{t.paymentMethod || 'Cash'}</span></td>
-                            <td>
-                              <span className={`badge ${getTransactionShift(t.createdAt) === 'Shift 1' ? 'badge-warning' : 'badge-info'}`} style={{ fontSize: '10px' }}>
-                                {getTransactionShift(t.createdAt) === 'Shift 1' ? '🌅' : '🌙'} {getTransactionShift(t.createdAt)}
-                              </span>
-                            </td>
-                            <td className="font-bold text-success">{formatCurrency(t.finalPrice)}</td>
-                            <td>
-                              <button className="btn btn-secondary btn-sm" onClick={() => setReceiptData(t)}>🧾</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <Pagination current={txPage} total={txTotalPages} onChange={setTxPage} />
-                </>
-              )}
             </div>
 
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title">💸 Pengeluaran ({data.expenses?.length})</h3>
+            {shiftFilter !== 'Semua' && (
+              <div style={{ padding: '8px 16px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                {shiftFilter === 'Shift 1' ? '🌅 Shift 1: 06:00 — 15:00 WIB' : '🌙 Shift 2: 15:00 — 06:00 WIB'} • Total: <strong className="text-success">{formatCurrency(filteredIncome)}</strong>
               </div>
-              {data.expenses?.length === 0 ? (
-                <p style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px' }}>Tidak ada pengeluaran</p>
-              ) : (
-                <>
-                  <div className="table-container">
-                    <table>
-                      <thead><tr><th>Tanggal</th><th>Kategori</th><th>Deskripsi</th><th>Nominal</th></tr></thead>
-                      <tbody>
-                        {paginatedEx.map((e) => (
-                          <tr key={e.id}>
-                            <td style={{ fontSize: '12px' }}>{formatDate(e.date)}</td>
-                            <td><span className="badge badge-warning">{e.category}</span></td>
-                            <td style={{ fontSize: '13px' }}>{e.description}</td>
-                            <td className="font-bold text-danger">{formatCurrency(e.amount)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <Pagination current={exPage} total={exTotalPages} onChange={setExPage} />
-                </>
-              )}
-            </div>
+            )}
+
+            {filteredTransactions.length === 0 ? (
+              <p style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px' }}>Tidak ada transaksi</p>
+            ) : (
+              <>
+                {/* Table for Tablet & Desktop (>= 768px) */}
+                <div className="table-container hide-mobile">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>No Order</th>
+                        <th>Waktu</th>
+                        <th>Kasir</th>
+                        <th>Via</th>
+                        <th>Shift</th>
+                        <th>Total</th>
+                        <th style={{ textAlign: 'center' }}>Detail</th>
+                        <th style={{ textAlign: 'center' }}>Struk</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedTx.map((t) => (
+                        <tr key={t.id}>
+                          <td style={{ fontSize: '12px', fontWeight: '700' }}>{t.orderNumber || `#${t.id}`}</td>
+                          <td style={{ fontSize: '12px' }}>{formatDateTime(t.createdAt)}</td>
+                          <td>{t.user?.name || '-'}</td>
+                          <td><span className="badge badge-info" style={{ fontSize: '10px' }}>{t.paymentMethod || 'Cash'}</span></td>
+                          <td>
+                            <span className={`badge ${getTransactionShift(t.createdAt) === 'Shift 1' ? 'badge-warning' : 'badge-info'}`} style={{ fontSize: '10px' }}>
+                              {getTransactionShift(t.createdAt) === 'Shift 1' ? '🌅' : '🌙'} {getTransactionShift(t.createdAt)}
+                            </span>
+                          </td>
+                          <td className="font-bold text-success">{formatCurrency(t.finalPrice)}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setDetailModalItem(t)} title="Detail Pesanan">🔍</button>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setReceiptData(t)} title="Preview Struk">🧾</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Table for Mobile HP (< 768px) - 3 Columns */}
+                <div className="table-container show-mobile">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>NO</th>
+                        <th style={{ textAlign: 'center' }}>Detail</th>
+                        <th style={{ textAlign: 'center' }}>Struk</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedTx.map((t) => (
+                        <tr key={t.id}>
+                          <td style={{ fontSize: '12px', fontWeight: '700', wordBreak: 'break-all' }}>
+                            {t.orderNumber || `#${t.id}`}
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setDetailModalItem(t)} title="Detail Pesanan">
+                              🔍
+                            </button>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setReceiptData(t)} title="Preview Struk">
+                              🧾
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <Pagination current={txPage} total={txTotalPages} onChange={setTxPage} />
+              </>
+            )}
           </div>
         </>
       )}
 
-      {/* Receipt Modal */}
+      {/* Detail Pesanan Modal */}
+      {detailModalItem && (
+        <Modal
+          isOpen={true}
+          onClose={() => setDetailModalItem(null)}
+          title={`Detail Pesanan — ${detailModalItem.orderNumber || '#' + detailModalItem.id}`}
+        >
+          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <span className="badge badge-success" style={{ fontSize: '12px' }}>✓ LUNAS</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                {new Date(detailModalItem.createdAt).toLocaleString('id-ID')}
+              </span>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+              gap: '8px',
+              background: 'var(--bg-tertiary)',
+              padding: '10px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '12px',
+            }}>
+              <div>👤 Kasir: <strong>{detailModalItem.user?.name || '-'}</strong></div>
+              <div>💳 Metode: <strong>{detailModalItem.paymentMethod || 'Cash'}</strong></div>
+              <div>⏱️ Shift: <strong>{getTransactionShift(detailModalItem.createdAt)}</strong></div>
+            </div>
+
+            <div>
+              <div style={{ fontWeight: '700', fontSize: '13px', marginBottom: '8px' }}>List Menu Dipesan:</div>
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Menu</th>
+                      <th style={{ textAlign: 'center' }}>Qty</th>
+                      <th style={{ textAlign: 'right' }}>Harga</th>
+                      <th style={{ textAlign: 'right' }}>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailModalItem.details?.map((d) => (
+                      <tr key={d.id}>
+                        <td style={{ fontWeight: '600' }}>{d.menu?.name || 'Item'}</td>
+                        <td style={{ textAlign: 'center' }}>x{d.quantity}</td>
+                        <td style={{ textAlign: 'right' }}>{formatCurrency(d.price)}</td>
+                        <td style={{ textAlign: 'right', fontWeight: '600' }}>{formatCurrency(d.subtotal)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '2px dashed var(--border)', paddingTop: '10px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span>Subtotal</span>
+                <span>{formatCurrency(detailModalItem.totalPrice || detailModalItem.finalPrice + (detailModalItem.discount || 0))}</span>
+              </div>
+              {detailModalItem.discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--danger)' }}>
+                  <span>Diskon</span>
+                  <span>-{formatCurrency(detailModalItem.discount)}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: '800', marginTop: '4px' }}>
+                <span>TOTAL AKHIR</span>
+                <span className="text-success">{formatCurrency(detailModalItem.finalPrice)}</span>
+              </div>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button className="btn btn-secondary" onClick={() => setDetailModalItem(null)}>Tutup</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Receipt Modal (Preview Struk) */}
       {receiptData && (
         <div className="modal-overlay" onClick={() => setReceiptData(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
@@ -371,8 +449,9 @@ export default function LaporanPage() {
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setReceiptData(null)}>Tutup</button>
+            <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+              <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ Cetak</button>
+              <button className="btn btn-secondary btn-sm" onClick={() => setReceiptData(null)}>Tutup</button>
             </div>
           </div>
         </div>

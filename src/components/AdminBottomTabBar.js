@@ -7,7 +7,6 @@ import { useState, useEffect, useRef } from 'react';
 const mainTabs = [
   { href: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
   { href: '/admin/bahan', icon: '🧂', label: 'Bahan' },
-  { href: '/kasir/transaksi', icon: '🛒', label: 'Kasir' },
   { href: '/admin/laporan', icon: '📋', label: 'Laporan' },
 ];
 
