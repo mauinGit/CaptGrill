@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
+import { isRecipeProducible, calcMaxProduction, isProductionQtyValid } from '@/lib/logic/production';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -79,6 +80,30 @@ export async function POST(request) {
     }
 
     const parsedQty = parseInt(quantity);
+
+    // --- Validasi produksi menggunakan tested logic ---
+    // Build composition & currentStock maps for logic functions
+    const composition = recipe.compositions.map((c) => ({
+      bahanId: String(c.ingredientId),
+      jumlah: Number(c.quantity),
+    }));
+    const currentStock = {};
+    for (const c of recipe.compositions) {
+      currentStock[String(c.ingredientId)] = Number(c.ingredient.stock);
+    }
+
+    if (!isRecipeProducible(composition, currentStock)) {
+      return apiError('Bahan dasar tidak cukup untuk 1x produksi', 400);
+    }
+
+    const maxProd = calcMaxProduction(composition, currentStock);
+    if (!isProductionQtyValid(parsedQty, maxProd)) {
+      return apiError(
+        `Jumlah produksi tidak valid. Maksimal yang bisa diproduksi: ${maxProd}x`,
+        400
+      );
+    }
+    // --- End validasi produksi ---
 
     // Build detail string
     const deductions = recipe.compositions.map(

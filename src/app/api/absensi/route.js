@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
+import { haversineDistance, isLocationValid } from '@/lib/logic/absensi';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -70,36 +71,18 @@ export async function POST(request) {
       return apiError(`Anda sudah melakukan absensi "${attendancePurpose}" hari ini`, 400);
     }
 
-    // Validate GPS distance
+    // Validate GPS distance using tested haversine logic
     const storeLat = parseFloat(process.env.STORE_LATITUDE || '-6.2');
     const storeLon = parseFloat(process.env.STORE_LONGITUDE || '106.8');
     const maxDist = parseFloat(process.env.MAX_ATTENDANCE_DISTANCE || '10');
 
-    console.log("MASUK API");
-    console.log("MAX DIST:", maxDist);
-
-    // 🔥 TAMBAHKAN INI
     const userLat = parseFloat(latitude);
     const userLng = parseFloat(longitude);
 
     if (!isNaN(userLat) && !isNaN(userLng)) {
-      const R = 6371e3;
-      const toRad = (x) => (x * Math.PI) / 180;
+      const distance = haversineDistance(userLat, userLng, storeLat, storeLon);
 
-      const dLat = toRad(userLat - storeLat);
-      const dLon = toRad(userLng - storeLon);
-
-      const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(storeLat)) *
-          Math.cos(toRad(userLat)) *
-          Math.sin(dLon / 2) ** 2;
-
-      const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-      console.log("DISTANCE:", distance);
-
-      if (distance > maxDist) {
+      if (!isLocationValid(distance, maxDist)) {
         return apiError(
           `Lokasi Anda terlalu jauh (${Math.round(distance)}m, maks ${maxDist}m)`,
           400
@@ -135,3 +118,4 @@ export async function POST(request) {
     return apiError('Gagal melakukan absensi', 500);
   }
 }
+

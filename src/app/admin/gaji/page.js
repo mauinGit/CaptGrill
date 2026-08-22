@@ -200,7 +200,7 @@ export default function GajiPage() {
                   <div className="mobile-card-footer">
                     <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Rincian lengkap</span>
                     <button className="btn btn-secondary btn-sm" onClick={() => setDetailData(s)}>
-                      📋 Detail & Bayar
+                      :
                     </button>
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export default function GajiPage() {
         <div className="modal-overlay" onClick={() => setDetailData(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="modal-header">
-              <h2>📋 Detail Gaji — {detailData.user?.name}</h2>
+              <h2>📋 Detail Gaji: {detailData.user?.name}</h2>
               <button className="modal-close" onClick={() => setDetailData(null)}>✕</button>
             </div>
             <div className="modal-body">

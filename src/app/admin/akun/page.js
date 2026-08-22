@@ -183,7 +183,7 @@ export default function AkunPage() {
         onClick={openAdd}
         title="Tambah Akun Kasir"
       >
-        ➕
+        +
       </button>
 
       {/* Action Sheet Modal for Mobile Tap */}

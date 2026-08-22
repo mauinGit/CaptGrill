@@ -1,6 +1,8 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 import { syncTransactionToSheet } from '@/lib/googleSheets';
+import { validateStockForTransaction } from '@/lib/logic/transactionValidation';
+import { calcFinalTotal } from '@/lib/logic/cart';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -52,7 +54,7 @@ export async function GET(request) {
   }
 }
 
-// CREATE transaction with auto stock reduction
+// CREATE transaction with stock validation & auto stock reduction
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -67,7 +69,7 @@ export async function POST(request) {
       return apiError('User tidak teridentifikasi', 401);
     }
 
-    // Calculate totals
+    // Calculate totals & collect ingredient data
     let totalPrice = 0;
     const itemDetails = [];
 
@@ -96,8 +98,49 @@ export async function POST(request) {
       });
     }
 
+    // --- Validasi stok SEBELUM memproses (Section 4 — atomic validation) ---
+    // Build menuCompositions map: menuId -> [{bahanId, jumlah}]
+    const menuCompositions = {};
+    const currentStock = {};
+
+    for (const detail of itemDetails) {
+      menuCompositions[detail.menuId] = detail.menuIngredients.map((mi) => ({
+        bahanId: String(mi.ingredientId),
+        jumlah: Number(mi.quantity),
+      }));
+      for (const mi of detail.menuIngredients) {
+        currentStock[String(mi.ingredientId)] = Number(mi.ingredient.stock);
+      }
+    }
+
+    const cartForValidation = itemDetails.map((d) => ({
+      menuId: d.menuId,
+      qty: d.quantity,
+    }));
+
+    const stockValidation = validateStockForTransaction(
+      cartForValidation,
+      menuCompositions,
+      currentStock
+    );
+
+    if (!stockValidation.valid) {
+      // Ambil nama bahan yang kurang untuk pesan error yang jelas
+      const insufficientNames = stockValidation.errors.map((e) => {
+        const mi = itemDetails
+          .flatMap((d) => d.menuIngredients)
+          .find((mi) => String(mi.ingredientId) === e.bahanId);
+        return mi?.ingredient?.name || `Bahan #${e.bahanId}`;
+      });
+      return apiError(
+        `Stok tidak cukup: ${insufficientNames.join(', ')}. Transaksi dibatalkan.`,
+        400
+      );
+    }
+    // --- End validasi stok ---
+
     const discountAmount = parseInt(discount) || 0;
-    const finalPrice = totalPrice - discountAmount;
+    const finalPrice = calcFinalTotal(totalPrice, discountAmount);
     const paid = parseInt(amountPaid) || finalPrice;
 
     // Date string for order number
@@ -145,7 +188,7 @@ export async function POST(request) {
         },
       });
 
-      // Reduce ingredient stock (can go negative)
+      // Reduce ingredient stock (validated above — stock is sufficient)
       for (const item of itemDetails) {
         for (const mi of item.menuIngredients) {
           await tx.ingredient.update({

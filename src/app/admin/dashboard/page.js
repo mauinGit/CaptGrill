@@ -2,24 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { formatCurrency } from '@/lib/utils';
-
-function getTierMax(rawMax) {
-  if (!rawMax || rawMax <= 0) return 1000000; // Default tier terendah = 1 Juta (1.000.000)
-
-  const baseTiers = [1, 2, 3, 5];
-  let multiplier = 1000000; // Mulai dari 1 Juta
-
-  while (multiplier <= 100000000000) {
-    for (const tier of baseTiers) {
-      const candidate = tier * multiplier;
-      if (candidate >= rawMax) {
-        return candidate;
-      }
-    }
-    multiplier *= 10;
-  }
-  return 1000000;
-}
+import { getYAxisMax } from '@/lib/logic/chartScale';
 
 // Minimal line chart using SVG — tier-scaled Y axis (1M -> 2M -> 3M -> 5M -> 10M ...)
 function LineChart({ data, width = 700, height = 190 }) {
@@ -31,7 +14,7 @@ function LineChart({ data, width = 700, height = 190 }) {
 
   // Auto-scale tier bertingkat dari nilai tertinggi aktual
   const rawMax = Math.max(...data.flatMap((d) => [d.income || 0, d.expense || 0]), 0);
-  const maxVal = getTierMax(rawMax);
+  const maxVal = getYAxisMax(rawMax);
 
   const getX = (i) => (i / (data.length - 1)) * chartW;
   const getY = (val) => chartH - ((val || 0) / maxVal) * chartH;

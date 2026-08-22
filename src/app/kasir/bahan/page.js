@@ -7,6 +7,7 @@ export default function BahanKasirPage() {
   const toast = useToast();
   const [recipes, setRecipes] = useState([]);
   const [productionLogs, setProductionLogs] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -66,6 +67,11 @@ export default function BahanKasirPage() {
     setSubmitting(false);
   };
 
+  const filteredRecipes = recipes.filter((r) =>
+    r.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.targetIngredient?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="animate-fade-in">
       <div className="navbar">
@@ -76,7 +82,7 @@ export default function BahanKasirPage() {
       </div>
 
       {/* Mobile top link for production logs */}
-      <div className="show-mobile" style={{ marginBottom: '16px' }}>
+      <div className="show-mobile" style={{ marginBottom: '12px' }}>
         <button
           className="btn btn-secondary w-full"
           onClick={() => setShowMobileLogs(true)}
@@ -88,20 +94,37 @@ export default function BahanKasirPage() {
       </div>
 
       <div className="pos-container">
-        {/* Recipe Grid */}
+        {/* Recipe Grid Column */}
         <div>
-          <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '700' }}>📋 Pilih Resep</h3>
+          {/* Real-time Search Bar for Recipes - Insides Recipe Column */}
+          <div className="search-bahan-box" style={{ marginBottom: '14px' }}>
+            <div className="search-box" style={{ width: '100%', maxWidth: '100%' }}>
+              <input
+                type="text"
+                className="form-input search-input"
+                placeholder="Cari bahan..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button className="search-clear" onClick={() => setSearchQuery('')}>✕</button>
+              )}
+            </div>
+          </div>
+
           {loading ? (
             <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat resep...</p></div>
-          ) : recipes.length === 0 ? (
+          ) : filteredRecipes.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">🧪</div>
-              <p>Belum ada resep tersedia</p>
-              <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>Hubungi admin untuk menambahkan resep</p>
+              <p>{searchQuery ? 'Resep tidak ditemukan' : 'Belum ada resep tersedia'}</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                {searchQuery ? 'Coba kata kunci lain' : 'Hubungi admin untuk menambahkan resep'}
+              </p>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-              {recipes.map((recipe) => (
+              {filteredRecipes.map((recipe) => (
                 <div
                   key={recipe.id}
                   onClick={() => selectRecipe(recipe)}

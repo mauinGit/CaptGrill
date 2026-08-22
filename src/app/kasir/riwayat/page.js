@@ -160,19 +160,30 @@ export default function RiwayatPage() {
         <Modal
           isOpen={true}
           onClose={() => setDetailModalItem(null)}
-          title={`Detail Pemesanan ${detailModalItem.orderNumber || '#' + detailModalItem.id}`}
+          title={`Detail Pemesanan — ${detailModalItem.orderNumber || '#' + detailModalItem.id}`}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
-              <div>📅 Tanggal: <strong>{new Date(detailModalItem.createdAt).toLocaleString('id-ID')}</strong></div>
-              <div>👤 Kasir: <strong>{detailModalItem.user?.name || '-'}</strong></div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
-              <div>💳 Metode: <strong>{detailModalItem.paymentMethod || 'Cash'}</strong></div>
-              <div>⏱️ Shift: <strong>{getTransactionShift(detailModalItem.createdAt)} ({getTransactionShift(detailModalItem.createdAt) === 'Shift 1' ? 'S1' : 'S2'})</strong></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <span className="badge badge-success" style={{ fontSize: '12px' }}>✓ LUNAS</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                {new Date(detailModalItem.createdAt).toLocaleString('id-ID')}
+              </span>
             </div>
 
-            <div style={{ marginTop: '8px' }}>
+            <div style={{
+              fontSize: '13px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              background: 'var(--bg-tertiary)',
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-md)',
+            }}>
+              <div>👤 Kasir: <strong>{detailModalItem.user?.name || '-'}</strong></div>
+              <div>💳 Metode: <strong>{detailModalItem.paymentMethod || 'Cash'}</strong> | ⏱️ Shift: <strong>{getTransactionShift(detailModalItem.createdAt)}</strong></div>
+            </div>
+
+            <div style={{ marginTop: '4px' }}>
               <div style={{ fontWeight: '700', fontSize: '13px', marginBottom: '8px' }}>Daftar Menu Dipesan:</div>
               <div className="table-container">
                 <table>
@@ -198,11 +209,7 @@ export default function RiwayatPage() {
               </div>
             </div>
 
-            <div style={{ borderTop: '2px dashed var(--border)', paddingTop: '12px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                <span>Subtotal</span>
-                <span>{formatCurrency(detailModalItem.totalPrice || detailModalItem.finalPrice + (detailModalItem.discount || 0))}</span>
-              </div>
+            <div style={{ borderTop: '2px dashed var(--border)', paddingTop: '10px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {detailModalItem.discount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--danger)' }}>
                   <span>Diskon</span>

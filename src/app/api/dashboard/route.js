@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
+import { getStockStatus } from '@/lib/logic/stockStatus';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -34,22 +35,21 @@ export async function GET() {
     });
 
     const lowStockItems = allIngredients
-      .filter((i) => parseFloat(i.stock) <= parseFloat(i.minStock))
       .map((i) => {
-        const stock = parseFloat(i.stock);
-        const minStock = parseFloat(i.minStock);
+        const stock = Number(i.stock);
+        const minStock = Number(i.minStock);
+        const status = getStockStatus(stock, minStock);
         return {
           id: i.id,
           name: i.name,
           unit: i.unit,
           stock,
           minStock,
-          // status: Habis if stock==0, else Menipis
-          status: stock === 0 ? 'HABIS' : 'MENIPIS',
-          // progress bar: percentage relative to minStock (0–100)
+          status: status === 'Habis' ? 'HABIS' : status === 'Menipis' ? 'MENIPIS' : 'AMAN',
           progressPercent: minStock > 0 ? Math.min(100, Math.round((stock / minStock) * 100)) : 0,
         };
-      });
+      })
+      .filter((i) => i.status !== 'AMAN');
 
     // Today's menu sales ranking
     const todayDetails = await prisma.transactionDetail.findMany({

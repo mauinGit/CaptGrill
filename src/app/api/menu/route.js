@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
+import { isMenuAvailable } from '@/lib/logic/menuAvailability';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -24,20 +25,18 @@ export async function GET(request) {
       orderBy: { name: 'asc' },
     });
 
-    // Compute isStockSufficient for each menu (spec §7.3)
+    // Compute isStockSufficient for each menu using tested logic (spec §7.3)
     const menusWithStock = menus.map((menu) => {
-      let isStockSufficient = true;
-      if (menu.menuIngredients && menu.menuIngredients.length > 0) {
-        for (const mi of menu.menuIngredients) {
-          const currentStock = parseFloat(mi.ingredient?.stock ?? 0);
-          const needed = parseFloat(mi.quantity ?? 0);
-          if (currentStock < needed) {
-            isStockSufficient = false;
-            break;
-          }
-        }
+      // Map Prisma MenuIngredient to logic function format
+      const composition = (menu.menuIngredients || []).map((mi) => ({
+        bahanId: String(mi.ingredientId),
+        jumlah: Number(mi.quantity),
+      }));
+      const currentStock = {};
+      for (const mi of (menu.menuIngredients || [])) {
+        currentStock[String(mi.ingredientId)] = Number(mi.ingredient?.stock ?? 0);
       }
-      return { ...menu, isStockSufficient };
+      return { ...menu, isStockSufficient: isMenuAvailable(composition, currentStock) };
     });
 
     return apiResponse(menusWithStock);

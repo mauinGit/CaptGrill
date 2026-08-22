@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
+import { calculateGaji } from '@/lib/logic/payroll';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -63,38 +64,40 @@ export async function POST(request) {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
 
-    const dateFilter = {
-      userId: parsedUserId,
-      date: { gte: startDate, lte: endDate },
-      status: 'VALID',
-    };
-
-    const shiftDays = await prisma.attendance.count({
+    // Fetch all VALID attendance records for this user in this period
+    const attendanceRecords = await prisma.attendance.findMany({
       where: {
-        ...dateFilter,
-        OR: [{ purpose: 'Shift 1' }, { purpose: 'Shift 2' }, { purpose: null }],
+        userId: parsedUserId,
+        date: { gte: startDate, lte: endDate },
+        status: 'VALID',
       },
+      select: { purpose: true, status: true },
     });
 
-    const produksiDays = await prisma.attendance.count({
-      where: {
-        ...dateFilter,
-        OR: [{ purpose: 'Membuat Bahan' }, { purpose: 'Buat Bahan' }],
-      },
+    // Map Prisma fields to logic function format:
+    // purpose → tujuan, status enum VALID → 'Valid'
+    const absensiList = attendanceRecords.map((a) => ({
+      tujuan: a.purpose || 'Shift 1',
+      status: a.status === 'VALID' ? 'Valid' : 'Ditolak',
+    }));
+
+    // Use tested calculateGaji logic
+    const gajiResult = calculateGaji({
+      absensiList,
+      rateShift: parsedShiftRate,
+      rateProduksi: parsedProduksiRate,
+      bonus: parsedBonus,
     });
 
-    const gajiShift = shiftDays * parsedShiftRate;
-    const gajiProduksi = produksiDays * parsedProduksiRate;
-    const totalSalary = gajiShift + gajiProduksi + parsedBonus;
-    const totalDays = shiftDays + produksiDays;
+    const totalDays = gajiResult.jumlahShift + gajiResult.jumlahProduksi;
     const dailyRate = parsedShiftRate || parsedProduksiRate;
 
     const salary = await prisma.salary.create({
       data: {
         userId: parsedUserId,
-        period, totalDays, dailyRate, totalSalary,
-        shiftDays, shiftRate: parsedShiftRate, gajiShift,
-        produksiDays, produksiRate: parsedProduksiRate, gajiProduksi,
+        period, totalDays, dailyRate, totalSalary: gajiResult.total,
+        shiftDays: gajiResult.jumlahShift, shiftRate: parsedShiftRate, gajiShift: gajiResult.gajiShift,
+        produksiDays: gajiResult.jumlahProduksi, produksiRate: parsedProduksiRate, gajiProduksi: gajiResult.gajiProduksi,
         bonus: parsedBonus, bonusNote: bonusNote || null,
         status: 'DRAFT',
       },
@@ -107,7 +110,7 @@ export async function POST(request) {
         data: {
           userId: parseInt(reqUserId),
           action: 'CREATE_SALARY',
-          detail: `Menghitung gaji ${salary.user.name} periode ${period}: Total=Rp${totalSalary}`,
+          detail: `Menghitung gaji ${salary.user.name} periode ${period}: Total=Rp${gajiResult.total}`,
         },
       });
     }
@@ -118,3 +121,4 @@ export async function POST(request) {
     return apiError('Gagal menghitung gaji: ' + (error.message || ''), 500);
   }
 }
+

@@ -174,7 +174,7 @@ export default function LaporanPage() {
           {/* Transactions Table Card */}
           <div className="card" style={{ marginTop: '20px' }}>
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <h3 className="card-title">💰 Transaksi ({filteredTransactions.length}){shiftFilter !== 'Semua' ? ` — ${shiftFilter}` : ''}</h3>
+              <h3 className="card-title">💰 Transaksi ({filteredTransactions.length})</h3>
               <div className="btn-group">
                 {['Semua', 'Shift 1', 'Shift 2'].map((s) => (
                   <button
@@ -187,12 +187,6 @@ export default function LaporanPage() {
                 ))}
               </div>
             </div>
-
-            {shiftFilter !== 'Semua' && (
-              <div style={{ padding: '8px 16px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                {shiftFilter === 'Shift 1' ? '🌅 Shift 1: 06:00 — 15:00 WIB' : '🌙 Shift 2: 15:00 — 06:00 WIB'} • Total: <strong className="text-success">{formatCurrency(filteredIncome)}</strong>
-              </div>
-            )}
 
             {filteredTransactions.length === 0 ? (
               <p style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px' }}>Tidak ada transaksi</p>
@@ -293,17 +287,16 @@ export default function LaporanPage() {
             </div>
 
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-              gap: '8px',
+              fontSize: '13px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
               background: 'var(--bg-tertiary)',
-              padding: '10px',
+              padding: '10px 14px',
               borderRadius: 'var(--radius-md)',
-              fontSize: '12px',
             }}>
               <div>👤 Kasir: <strong>{detailModalItem.user?.name || '-'}</strong></div>
-              <div>💳 Metode: <strong>{detailModalItem.paymentMethod || 'Cash'}</strong></div>
-              <div>⏱️ Shift: <strong>{getTransactionShift(detailModalItem.createdAt)}</strong></div>
+              <div>💳 Metode: <strong>{detailModalItem.paymentMethod || 'Cash'}</strong> | ⏱️ Shift: <strong>{getTransactionShift(detailModalItem.createdAt)}</strong></div>
             </div>
 
             <div>
@@ -333,10 +326,6 @@ export default function LaporanPage() {
             </div>
 
             <div style={{ borderTop: '2px dashed var(--border)', paddingTop: '10px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                <span>Subtotal</span>
-                <span>{formatCurrency(detailModalItem.totalPrice || detailModalItem.finalPrice + (detailModalItem.discount || 0))}</span>
-              </div>
               {detailModalItem.discount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--danger)' }}>
                   <span>Diskon</span>

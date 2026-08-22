@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomTabBar from '@/components/BottomTabBar';
 import ProfileSheet from '@/components/ProfileSheet';
+import Sidebar from '@/components/Sidebar';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/components/Toast';
 import { BluetoothProvider } from '@/components/BluetoothPrinter';
@@ -47,46 +48,56 @@ export default function KasirLayout({ children }) {
     <ThemeProvider>
       <ToastProvider>
         <BluetoothProvider>
-          {/* Kasir top bar — profile sheet di kanan */}
-          <header className="kasir-topbar">
-            <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '28px', height: '28px', borderRadius: 'var(--radius-sm)',
-                background: 'var(--accent)', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: '16px',
-              }}>🔥</div>
-              <span style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)' }}>CaptGrill</span>
+          <div className="app-container">
+            {/* Sidebar - Tampil HANYA di Laptop/Desktop (>= 1024px) */}
+            <div className="sidebar-kasir">
+              <Sidebar role="KASIR" userName={user.name} />
             </div>
-            <div style={{ marginLeft: 'auto' }}>
-              <ProfileSheet userName={user.name} role="KASIR" />
-            </div>
-          </header>
 
-          {/* Main content */}
-          <main className="kasir-content animate-fade-in">
-            {user.isDemo && (
-              <div style={{
-                background: 'linear-gradient(135deg, #ff6b35, #f7c948)',
-                color: '#1a1a2e',
-                padding: '10px 20px',
-                borderRadius: '10px',
-                margin: '0 0 16px 0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                fontWeight: '600',
-                fontSize: '13px',
-                boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)',
-              }}>
-                <span style={{ fontSize: '18px' }}>🔒</span>
-                <span>Mode Demo — Akun ini hanya bisa melihat data (view-only). Tidak bisa menambah, mengubah, atau menghapus data.</span>
+            {/* Topbar - Tampil HANYA di Mobile & Tablet (< 1024px) */}
+            <header className="kasir-topbar">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img
+                  src="/assets/logo.png"
+                  alt="CaptGrill"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                  style={{ height: '26px', width: 'auto', objectFit: 'contain' }}
+                />
+                <span style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)' }}>CaptGrill</span>
               </div>
-            )}
-            {children}
-          </main>
+              <div style={{ marginLeft: 'auto' }}>
+                <ProfileSheet userName={user.name} role="KASIR" />
+              </div>
+            </header>
 
-          {/* Bottom Tab Bar */}
-          <BottomTabBar />
+            {/* Main Content */}
+            <main className="kasir-content main-content animate-fade-in">
+              {user.isDemo && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #ff6b35, #f7c948)',
+                  color: '#1a1a2e',
+                  padding: '10px 20px',
+                  borderRadius: '10px',
+                  margin: '0 0 16px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                  boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)',
+                }}>
+                  <span style={{ fontSize: '18px' }}>🔒</span>
+                  <span>Mode Demo — Akun ini hanya bisa melihat data (view-only). Tidak bisa menambah, mengubah, atau menghapus data.</span>
+                </div>
+              )}
+              {children}
+            </main>
+
+            {/* Bottom Tab Bar - Tampil HANYA di Mobile & Tablet (< 1024px) */}
+            <div className="bottom-tabbar-kasir">
+              <BottomTabBar />
+            </div>
+          </div>
         </BluetoothProvider>
       </ToastProvider>
     </ThemeProvider>
