@@ -1,6 +1,5 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
-import { syncTransactionToSheet } from '@/lib/googleSheets';
 import { validateStockForTransaction } from '@/lib/logic/transactionValidation';
 import { calcFinalTotal } from '@/lib/logic/cart';
 
@@ -211,9 +210,6 @@ export async function POST(request) {
 
       return updated;
     });
-
-    // Sync ke Google Sheets (background, non-blocking)
-    syncTransactionToSheet(result);
 
     return apiResponse(result, 201);
   } catch (error) {

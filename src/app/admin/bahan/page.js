@@ -246,7 +246,7 @@ export default function BahanPage() {
           placeholder="5"
         />
         <small style={{ color: 'var(--text-tertiary)', fontSize: '11px', marginTop: '4px', display: 'block' }}>
-          💡 Peringatan "Stok Menipis" akan muncul jika stok di bawah angka ini.
+          💡 Peringatan &quot;Stok Menipis&quot; akan muncul jika stok di bawah angka ini.
         </small>
       </div>
 

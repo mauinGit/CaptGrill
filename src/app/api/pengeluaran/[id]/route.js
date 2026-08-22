@@ -1,6 +1,5 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
-import { updateExpenseInSheet, deleteExpenseFromSheet } from '@/lib/googleSheets';
 
 export async function PUT(request, { params }) {
   try {
@@ -29,9 +28,6 @@ export async function PUT(request, { params }) {
       });
     }
 
-    // Sync update ke Google Sheets (background, non-blocking)
-    updateExpenseInSheet(expense);
-
     return apiResponse(expense);
   } catch (error) {
     console.error('Update expense error:', error);
@@ -57,9 +53,6 @@ export async function DELETE(request, { params }) {
         },
       });
     }
-
-    // Sync hapus dari Google Sheets (background, non-blocking)
-    deleteExpenseFromSheet(parseInt(id));
 
     return apiResponse({ message: 'Pengeluaran berhasil dihapus' });
   } catch (error) {

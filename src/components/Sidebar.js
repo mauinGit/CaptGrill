@@ -65,7 +65,7 @@ export default function Sidebar({ role, userName }) {
   const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const bt = role === 'KASIR' ? useBluetooth() : null;
+  const bt = useBluetooth();
   const links = role === 'ADMIN' ? adminLinks : kasirLinks;
 
   const handleLogout = async () => {
