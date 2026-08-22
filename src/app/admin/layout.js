@@ -65,7 +65,7 @@ export default function AdminLayout({ children }) {
                 boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)',
               }}>
                 <span style={{ fontSize: '18px' }}>🔒</span>
-                <span>Mode Demo — Akun ini hanya bisa melihat data (view-only). Tidak bisa menambah, mengubah, atau menghapus data.</span>
+                <span>Mode Demo : Akun ini hanya bisa melihat data (view-only). Tidak bisa menambah, mengubah, atau menghapus data.</span>
               </div>
             )}
             {children}

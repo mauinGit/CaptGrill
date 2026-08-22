@@ -59,7 +59,7 @@ export default function ProfileSheet({ userName, role }) {
         }}
         onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
         onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-        title={`${userName} — ${role}`}
+        title={`${userName} : ${role}`}
       >
         {initials}
       </button>

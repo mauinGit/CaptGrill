@@ -160,7 +160,7 @@ export default function RiwayatPage() {
         <Modal
           isOpen={true}
           onClose={() => setDetailModalItem(null)}
-          title={`Detail Pemesanan — ${detailModalItem.orderNumber || '#' + detailModalItem.id}`}
+          title={`Detail Pemesanan : ${detailModalItem.orderNumber || '#' + detailModalItem.id}`}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>

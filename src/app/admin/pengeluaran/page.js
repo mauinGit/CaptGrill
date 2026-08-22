@@ -128,7 +128,7 @@ export default function PengeluaranPage() {
       <div className="toolbar">
         <div className="toolbar-left" style={{ gap: '8px', flexWrap: 'wrap' }}>
           <input type="date" className="form-input" value={from} onChange={(e) => setFrom(e.target.value)} style={{ maxWidth: '150px' }} />
-          <span style={{ color: 'var(--text-tertiary)' }}>—</span>
+          <span style={{ color: 'var(--text-tertiary)' }}>:</span>
           <input type="date" className="form-input" value={to} onChange={(e) => setTo(e.target.value)} style={{ maxWidth: '150px' }} />
         </div>
         <div className="toolbar-right">

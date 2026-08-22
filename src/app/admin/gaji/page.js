@@ -139,7 +139,7 @@ export default function GajiPage() {
                             {s.bonusNote && <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{s.bonusNote}</div>}
                           </div>
                         ) : (
-                          <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>—</span>
+                          <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>:</span>
                         )}
                       </td>
                       <td style={{ fontWeight: '700', color: 'var(--success)' }}>{formatCurrency(s.totalSalary)}</td>

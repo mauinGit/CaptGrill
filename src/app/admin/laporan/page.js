@@ -276,7 +276,7 @@ export default function LaporanPage() {
         <Modal
           isOpen={true}
           onClose={() => setDetailModalItem(null)}
-          title={`Detail Pesanan — ${detailModalItem.orderNumber || '#' + detailModalItem.id}`}
+          title={`Detail Pesanan : ${detailModalItem.orderNumber || '#' + detailModalItem.id}`}
         >
           <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>

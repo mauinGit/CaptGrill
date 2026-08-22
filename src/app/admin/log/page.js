@@ -39,7 +39,7 @@ export default function LogPage() {
       <div className="toolbar">
         <div className="toolbar-left" style={{ gap: '8px' }}>
           <input type="date" className="form-input" value={from} onChange={(e) => setFrom(e.target.value)} style={{ maxWidth: '160px' }} />
-          <span style={{ color: 'var(--text-tertiary)' }}>—</span>
+          <span style={{ color: 'var(--text-tertiary)' }}>:</span>
           <input type="date" className="form-input" value={to} onChange={(e) => setTo(e.target.value)} style={{ maxWidth: '160px' }} />
           {(from || to) && (
             <button className="btn btn-secondary btn-sm" onClick={() => { setFrom(''); setTo(''); }}>✕ Reset</button>
