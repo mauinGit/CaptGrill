@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import Icon from '@/components/Icon';
 
 // Kategori manual (Gaji Karyawan excluded from manual input per spec §9.2)
 const CATEGORIES = ['Pembelian Bahan', 'Peralatan & Perlengkapan', 'Sewa & Utilitas', 'Perawatan & Servis', 'Marketing & Promosi', 'Lain-lain'];
@@ -119,7 +120,7 @@ export default function PengeluaranPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>💸 Manajemen Pengeluaran</h1>
+          <h1>Manajemen Pengeluaran</h1>
           <p>Catat semua pengeluaran operasional</p>
         </div>
       </div>
@@ -132,7 +133,7 @@ export default function PengeluaranPage() {
           <input type="date" className="form-input" value={to} onChange={(e) => setTo(e.target.value)} style={{ maxWidth: '150px' }} />
         </div>
         <div className="toolbar-right">
-          <button className="btn btn-primary hide-mobile" onClick={openAdd}>➕ Tambah</button>
+          <button className="btn btn-primary hide-mobile" onClick={openAdd}><Icon name="plus" /> Tambah</button>
         </div>
       </div>
 
@@ -192,12 +193,12 @@ export default function PengeluaranPage() {
             cursor: 'pointer',
           }}
         >
-          <option value="Semua">📁 Semua Kategori</option>
+          <option value="Semua">Semua Kategori</option>
           {allCategories.map((cat) => (
-            <option key={cat} value={cat}>📁 {cat}</option>
+            <option key={cat} value={cat}>{cat}</option>
           ))}
           <option value="__ADD_NEW__" style={{ fontWeight: '700', color: 'var(--primary)' }}>
-            ➕ Tambah Kategori Baru...
+            Tambah Kategori Baru...
           </option>
         </select>
       </div>
@@ -223,9 +224,9 @@ export default function PengeluaranPage() {
       {/* Table view for Tablet & Laptop (>= 768px) */}
       <div className="card hide-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
         ) : filtered.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">📭</div><p>Belum ada pengeluaran</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="inbox" /></div><p>Belum ada pengeluaran</p></div>
         ) : (
           <div className="table-container">
             <table>
@@ -241,7 +242,7 @@ export default function PengeluaranPage() {
                       <td>{formatDate(item.date)}</td>
                       <td>
                         <span className={`badge ${isAutoEntry ? 'badge-secondary' : 'badge-warning'}`} style={{ fontSize: '11px' }}>
-                          {isAutoEntry && '🔒 '}{item.category}
+                          {isAutoEntry && <Icon name="lock" />} {item.category}
                         </span>
                       </td>
                       <td>{item.description || '-'}</td>
@@ -251,8 +252,8 @@ export default function PengeluaranPage() {
                           <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Otomatis</span>
                         ) : (
                           <div className="btn-group">
-                            <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}>✏️</button>
-                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>🗑️</button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}><Icon name="pencil" /></button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}><Icon name="trash" /></button>
                           </div>
                         )}
                       </td>
@@ -268,9 +269,9 @@ export default function PengeluaranPage() {
       {/* Card list view for HP (< 768px) */}
       <div className="show-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
         ) : filtered.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">📭</div><p>Belum ada pengeluaran</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="inbox" /></div><p>Belum ada pengeluaran</p></div>
         ) : (
           <div className="mobile-card-list">
             {filtered.map((item) => {
@@ -279,7 +280,7 @@ export default function PengeluaranPage() {
                 <div key={item.id} className="mobile-card" style={{ opacity: isAutoEntry ? 0.85 : 1, background: isAutoEntry ? 'var(--bg-tertiary)' : undefined }}>
                   <div className="mobile-card-header">
                     <span className={`badge ${isAutoEntry ? 'badge-secondary' : 'badge-warning'}`} style={{ fontSize: '11px' }}>
-                      {isAutoEntry && '🔒 '}{item.category}
+                      {isAutoEntry && <Icon name="lock" />} {item.category}
                     </span>
                     <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{formatDate(item.date)}</span>
                   </div>
@@ -292,8 +293,8 @@ export default function PengeluaranPage() {
                       <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Entri Otomatis</span>
                     ) : (
                       <div className="btn-group">
-                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}>✏️ Edit</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>🗑️ Hapus</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}><Icon name="pencil" /> Edit</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}><Icon name="trash" /> Hapus</button>
                       </div>
                     )}
                   </div>

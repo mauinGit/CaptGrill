@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 
-// PATCH attendance — soft reject (update status + reason, no permanent delete)
+// PATCH attendance - soft reject (update status + reason, no permanent delete)
 export async function PATCH(request, { params }) {
   try {
     const { id } = await params;

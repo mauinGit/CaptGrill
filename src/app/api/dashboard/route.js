@@ -29,7 +29,7 @@ export async function GET() {
     const yesterdayIncome = yesterdayTransactions.reduce((sum, t) => sum + t.finalPrice, 0);
     const yesterdayTransactionCount = yesterdayTransactions.length;
 
-    // Low stock ingredients — full list with status
+    // Low stock ingredients - full list with status
     const allIngredients = await prisma.ingredient.findMany({
       orderBy: { name: 'asc' },
     });

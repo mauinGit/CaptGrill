@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 
-// PATCH salary — mark as PAID + auto-create Expense
+// PATCH salary - mark as PAID + auto-create Expense
 export async function PATCH(request, { params }) {
   try {
     const { id } = await params;

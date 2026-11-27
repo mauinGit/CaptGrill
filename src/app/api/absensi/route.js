@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 import { haversineDistance, isLocationValid } from '@/lib/logic/absensi';
+import { getAttendanceConfig } from '@/lib/attendanceConfig';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -72,9 +73,7 @@ export async function POST(request) {
     }
 
     // Validate GPS distance using tested haversine logic
-    const storeLat = parseFloat(process.env.STORE_LATITUDE || '-6.2');
-    const storeLon = parseFloat(process.env.STORE_LONGITUDE || '106.8');
-    const maxDist = parseFloat(process.env.MAX_ATTENDANCE_DISTANCE || '10');
+    const { storeLat, storeLng: storeLon, maxDistance: maxDist } = getAttendanceConfig();
 
     const userLat = parseFloat(latitude);
     const userLng = parseFloat(longitude);

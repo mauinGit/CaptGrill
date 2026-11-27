@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
 import { formatCurrency } from '@/lib/utils';
+import Icon from '@/components/Icon';
 
 export default function MenuPage() {
   const toast = useToast();
@@ -168,7 +169,7 @@ export default function MenuPage() {
             {form.image ? (
               <img src={form.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <span style={{ color: 'var(--text-tertiary)', fontSize: '11px', textAlign: 'center' }}>📷 Upload</span>
+              <span style={{ color: 'var(--text-tertiary)', fontSize: '11px', textAlign: 'center' }}><Icon name="camera" /> Upload</span>
             )}
           </div>
           <input
@@ -213,7 +214,7 @@ export default function MenuPage() {
       <div style={{ marginTop: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <label className="form-label" style={{ margin: 0 }}>Komposisi Bahan</label>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={addComposition}>➕ Tambah Bahan</button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={addComposition}><Icon name="plus" /> Tambah Bahan</button>
         </div>
         {form.compositions.length === 0 && (
           <p style={{ color: 'var(--text-tertiary)', fontSize: '12px', textAlign: 'center', padding: '12px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
@@ -240,7 +241,7 @@ export default function MenuPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>🍔 Manajemen Menu</h1>
+          <h1>Manajemen Menu</h1>
           <p>Kelola menu dan komposisi bahan</p>
         </div>
       </div>
@@ -249,12 +250,12 @@ export default function MenuPage() {
       <div className="toolbar">
         <div className="toolbar-left">
           <div className="search-box" style={{ maxWidth: '320px', width: '100%' }}>
-            <span className="search-box-icon">🔍</span>
+            <span className="search-box-icon"><Icon name="search" /></span>
             <input type="text" className="form-input" placeholder="Cari menu..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ paddingLeft: '40px' }} />
           </div>
         </div>
         <div className="toolbar-right">
-          <button className="btn btn-primary hide-mobile" onClick={openAdd}>➕ Tambah Menu</button>
+          <button className="btn btn-primary hide-mobile" onClick={openAdd}><Icon name="plus" /> Tambah Menu</button>
         </div>
       </div>
 
@@ -276,16 +277,16 @@ export default function MenuPage() {
               transition: 'var(--transition)',
             }}
           >
-            {cat === 'Makanan' ? '🍔 Makanan' : cat === 'Minuman' ? '🥤 Minuman' : cat === 'Snack' ? '🍟 Snack' : 'Semua'}
+            {cat !== 'Semua' && <Icon name={cat === 'Minuman' ? 'cup' : cat === 'Snack' ? 'fries' : 'burger'} />} {cat}
           </button>
         ))}
       </div>
 
       {/* Grid Kartu Menu: 2 Kolom di HP, 3 Kolom di Tablet & Laptop */}
       {loading ? (
-        <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat data...</p></div>
+        <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat data...</p></div>
       ) : filteredMenus.length === 0 ? (
-        <div className="empty-state"><div className="empty-state-icon">🍽️</div><p>Belum ada menu</p></div>
+        <div className="empty-state"><div className="empty-state-icon"><Icon name="utensils" /></div><p>Belum ada menu</p></div>
       ) : (
         <div style={{
           display: 'grid',
@@ -314,7 +315,7 @@ export default function MenuPage() {
                     <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
-                      {item.category === 'Minuman' ? '🥤' : item.category === 'Snack' ? '🍟' : '🍔'}
+                      <Icon name={item.category === 'Minuman' ? 'cup' : item.category === 'Snack' ? 'fries' : 'burger'} />
                     </div>
                   )}
 
@@ -323,7 +324,7 @@ export default function MenuPage() {
                     {isAvailable ? (
                       <span className="badge badge-success" style={{ fontSize: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>✓ Tersedia</span>
                     ) : (
-                      <span className="badge badge-danger" style={{ fontSize: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>⛔ Stok Habis</span>
+                      <span className="badge badge-danger" style={{ fontSize: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}><Icon name="ban" /> Stok Habis</span>
                     )}
                   </div>
                 </div>
@@ -342,10 +343,10 @@ export default function MenuPage() {
 
                   <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border-light)', paddingTop: '10px', marginTop: '4px' }}>
                     <button className="btn btn-secondary btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => openEdit(item)}>
-                      ✏️ Edit
+                      <Icon name="pencil" /> Edit
                     </button>
                     <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>
-                      🗑️
+                      <Icon name="trash" />
                     </button>
                   </div>
                 </div>
@@ -389,7 +390,7 @@ export default function MenuPage() {
             <div className="side-panel-overlay" onClick={() => setModalOpen(false)}>
               <div className="side-panel" onClick={(e) => e.stopPropagation()}>
                 <div className="side-panel-header">
-                  <h3 style={{ fontSize: '16px', fontWeight: '700' }}>➕ Tambah Menu Baru</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: '700' }}><Icon name="plus" /> Tambah Menu Baru</h3>
                   <button className="modal-close" onClick={() => setModalOpen(false)}>✕</button>
                 </div>
                 <div className="side-panel-body">
@@ -407,7 +408,7 @@ export default function MenuPage() {
 
           {/* Laptop Modal Dialog (>= 1024px) */}
           <div className="hide-mobile hide-tablet">
-            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="➕ Tambah Menu Baru" size="lg">
+            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Tambah Menu Baru" size="lg">
               <form onSubmit={handleSubmit}>
                 <div className="modal-body">
                   {renderFormFields()}
@@ -424,7 +425,7 @@ export default function MenuPage() {
 
       {/* Edit Modal (Dialog for all devices) */}
       {modalOpen && editItem && (
-        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="✏️ Edit Menu" size="lg">
+        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Edit Menu" size="lg">
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
               {renderFormFields()}

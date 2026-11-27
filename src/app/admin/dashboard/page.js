@@ -3,8 +3,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { getYAxisMax } from '@/lib/logic/chartScale';
+import Icon from '@/components/Icon';
 
-// Minimal line chart using SVG — tier-scaled Y axis (1M -> 2M -> 3M -> 5M -> 10M ...)
+// Minimal line chart using SVG - tier-scaled Y axis (1M -> 2M -> 3M -> 5M -> 10M ...)
 function LineChart({ data, width = 700, height = 190 }) {
   if (!data || data.length === 0) return null;
 
@@ -31,11 +32,11 @@ function LineChart({ data, width = 700, height = 190 }) {
     if (v === 0) return '0';
     if (v >= 1000000) {
       const val = v / 1000000;
-      return Number.isInteger(val) ? `${val}jt` : `${val.toFixed(2).replace(/\.?0+$/, '')}jt`;
+      return Number.isInteger(val) ? `${val} juta` : `${val.toFixed(2).replace(/\.?0+$/, '').replace('.', ',')} juta`;
     }
     if (v >= 1000) {
       const val = v / 1000;
-      return Number.isInteger(val) ? `${val}k` : `${val.toFixed(1).replace(/\.?0+$/, '')}k`;
+      return Number.isInteger(val) ? `${val} ribu` : `${val.toFixed(1).replace(/\.?0+$/, '').replace('.', ',')} ribu`;
     }
     return v.toString();
   };
@@ -97,10 +98,10 @@ function LineChart({ data, width = 700, height = 190 }) {
 
 function DeltaBadge({ today, yesterday }) {
   if (yesterday === 0 && today === 0) {
-    return <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>— kmrn</span>;
+    return <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Sama seperti kemarin</span>;
   }
   if (yesterday === 0) {
-    return <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>▲ Baru kmrn</span>;
+    return <span style={{ fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}><Icon name="trending-up" /> Naik dari kemarin</span>;
   }
   const delta = ((today - yesterday) / yesterday) * 100;
   const isUp = delta >= 0;
@@ -113,7 +114,7 @@ function DeltaBadge({ today, yesterday }) {
       alignItems: 'center',
       gap: '2px',
     }}>
-      {isUp ? '▲' : '▼'} {Math.abs(delta).toFixed(0)}% kmrn
+      <Icon name={isUp ? 'trending-up' : 'trending-down'} /> {isUp ? 'Naik' : 'Turun'} {Math.abs(delta).toFixed(0)}% dari kemarin
     </span>
   );
 }
@@ -132,7 +133,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon">⏳</div>
+        <div className="empty-state-icon"><Icon name="loader" /></div>
         <p>Memuat dashboard...</p>
       </div>
     );
@@ -141,7 +142,7 @@ export default function AdminDashboard() {
   if (!data) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon">❌</div>
+        <div className="empty-state-icon"><Icon name="x-circle" /></div>
         <p>Gagal memuat data</p>
       </div>
     );
@@ -152,12 +153,12 @@ export default function AdminDashboard() {
       {/* Page Header */}
       <div className="navbar">
         <div className="navbar-left">
-          <h1>📊 Dashboard</h1>
+          <h1>Dashboard</h1>
           <p>Selamat datang <span style={{ color: 'var(--primary)' }}>admin</span></p>
         </div>
       </div>
 
-      {/* Stat Cards — 2 kolom sejajar */}
+      {/* Stat Cards - 2 kolom sejajar */}
       <div className="two-col-stats" style={{ marginBottom: '24px' }}>
         {/* Transaksi */}
         <div className="summary-card">
@@ -185,7 +186,7 @@ export default function AdminDashboard() {
       {/* Grafik Keuangan */}
       <div className="card" style={{ marginBottom: '24px' }}>
         <div className="card-header">
-          <h3 className="card-title">📈 Grafik Keuangan</h3>
+          <h3 className="card-title"><Icon name="trending-up" /> Grafik Keuangan</h3>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <div className="hide-mobile" style={{ display: 'flex', gap: '12px', marginRight: '8px' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
@@ -213,11 +214,11 @@ export default function AdminDashboard() {
       {/* Menu Terlaris Hari Ini */}
       <div className="card" style={{ marginBottom: '24px' }}>
         <div className="card-header">
-          <h3 className="card-title">🏆 Menu Terlaris Hari Ini</h3>
+          <h3 className="card-title"><Icon name="trophy" /> Menu Terlaris Hari Ini</h3>
         </div>
         {!data.menuSales || data.menuSales.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-tertiary)' }}>
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}><Icon name="inbox" /></div>
             <p style={{ fontSize: '14px' }}>Belum ada penjualan hari ini</p>
           </div>
         ) : (
@@ -252,7 +253,7 @@ export default function AdminDashboard() {
                   <div>
                     <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary)' }}>{item.name}</div>
                     <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                      {item.category === 'Minuman' ? '🥤' : item.category === 'Snack' ? '🍟' : '🍔'} {item.category}
+                      <Icon name={item.category === 'Minuman' ? 'cup' : item.category === 'Snack' ? 'fries' : 'burger'} /> {item.category}
                     </div>
                   </div>
                 </div>
@@ -269,14 +270,14 @@ export default function AdminDashboard() {
       {/* Stok Menipis */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title">⚠️ Stok Menipis</h3>
+          <h3 className="card-title"><Icon name="alert" /> Stok Menipis</h3>
           {data.lowStockItems?.length > 0 && (
             <span className="badge badge-danger">{data.lowStockItems.length} bahan</span>
           )}
         </div>
         {!data.lowStockItems || data.lowStockItems.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-tertiary)' }}>
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}><Icon name="check-circle" /></div>
             <p style={{ fontSize: '14px' }}>Semua stok aman</p>
           </div>
         ) : (
@@ -289,9 +290,9 @@ export default function AdminDashboard() {
                       {item.name}
                     </span>
                     {item.status === 'HABIS' ? (
-                      <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 8px' }}>⛔ Habis</span>
+                      <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 8px' }}><Icon name="ban" /> Habis</span>
                     ) : (
-                      <span className="badge badge-warning" style={{ fontSize: '10px', padding: '2px 8px' }}>⚠ Menipis</span>
+                      <span className="badge badge-warning" style={{ fontSize: '10px', padding: '2px 8px' }}><Icon name="alert" /> Menipis</span>
                     )}
                   </div>
                   <div style={{ textAlign: 'right', fontSize: '12px' }}>

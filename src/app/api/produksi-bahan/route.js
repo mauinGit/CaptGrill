@@ -49,7 +49,7 @@ export async function GET(request) {
   }
 }
 
-// PROCESS production — deduct raw ingredients, add output ingredient
+// PROCESS production - deduct raw ingredients, add output ingredient
 export async function POST(request) {
   try {
     const body = await request.json();

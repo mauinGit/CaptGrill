@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { formatDateTime } from '@/lib/utils';
+import Icon from '@/components/Icon';
 
 const PAGE_SIZE = 10;
 
@@ -31,7 +32,7 @@ export default function LogPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>📝 Log Aktivitas</h1>
+          <h1>Log Aktivitas</h1>
           <p>Riwayat aktivitas seluruh pengguna</p>
         </div>
       </div>
@@ -49,9 +50,9 @@ export default function LogPage() {
 
       <div className="card">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
         ) : logs.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">📭</div><p>Belum ada log</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="inbox" /></div><p>Belum ada log</p></div>
         ) : (
           <>
             <div className="table-container">

@@ -1,5 +1,5 @@
 /**
- * Section 7.3 — Status Ketersediaan Menu (Tersedia / Stok Tidak Cukup)
+ * Section 7.3 - Status Ketersediaan Menu (Tersedia / Stok Tidak Cukup)
  * Menu dianggap tersedia jika SEMUA bahan komposisinya cukup untuk
  * minimal 1 porsi.
  */

@@ -203,7 +203,7 @@ export default function LoginPage() {
   const [cpShowOld, setCpShowOld] = useState(false);
   const [cpShowNew, setCpShowNew] = useState(false);
 
-  // Fokus otomatis hanya di layar lebar — di HP keyboard tidak langsung menutupi layar
+  // Fokus otomatis hanya di layar lebar - di HP keyboard tidak langsung menutupi layar
   useEffect(() => {
     if (!window.matchMedia('(min-width: 1024px)').matches) return;
     if (mode === 'change') cpUsernameRef.current?.focus();
@@ -314,7 +314,7 @@ export default function LoginPage() {
         <div className={styles.brandTop}>
           <Image
             src="/assets/logo.png"
-            alt="CaptGrill — #PERFECTIN1BITE by Sekenyangan"
+            alt="CaptGrill, #PERFECTIN1BITE by Sekenyangan"
             width={1681}
             height={748}
             sizes="140px"
@@ -353,7 +353,7 @@ export default function LoginPage() {
             <br />
             <span>hari ini?</span>
           </h1>
-          <p>Transaksi kasir, stok bahan, dan absensi karyawan CaptGrill — semuanya tercatat di satu tempat.</p>
+          <p>Transaksi kasir, stok bahan, dan absensi karyawan CaptGrill tercatat rapi di satu tempat.</p>
         </div>
       </aside>
 

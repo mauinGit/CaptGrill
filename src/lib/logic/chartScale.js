@@ -1,7 +1,7 @@
 /**
  * Logic skala sumbu Y untuk Grafik Keuangan (Dashboard & Laporan).
  * Skala bertingkat (tier tetap), BUKAN hardcode angka tunggal, BUKAN
- * auto-scale bebas — tapi memilih tier terkecil dari deret tetap yang
+ * auto-scale bebas - tapi memilih tier terkecil dari deret tetap yang
  * >= nilai data tertinggi.
  *
  * Deret dasar: 1jt, 2jt, 3jt, 5jt -> lanjut x10 tiap level:

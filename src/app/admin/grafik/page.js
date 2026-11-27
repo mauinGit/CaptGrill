@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Icon from '@/components/Icon';
 
 export default function GrafikPage() {
   const [data, setData] = useState([]);
@@ -54,7 +55,7 @@ export default function GrafikPage() {
   }, []);
 
   if (loading) {
-    return <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat grafik...</p></div>;
+    return <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat grafik...</p></div>;
   }
 
   const Chart = chartType === 'bar' ? BarChart : LineChart;
@@ -63,13 +64,13 @@ export default function GrafikPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>📈 Grafik Keuangan</h1>
+          <h1>Grafik Keuangan</h1>
           <p>Visualisasi pemasukan & pengeluaran 30 hari terakhir</p>
         </div>
         <div className="navbar-right">
           <div className="btn-group">
-            <button className={`btn ${chartType === 'bar' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setChartType('bar')}>📊 Bar</button>
-            <button className={`btn ${chartType === 'line' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setChartType('line')}>📈 Line</button>
+            <button className={`btn ${chartType === 'bar' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setChartType('bar')}><Icon name="bar-chart" /> Bar</button>
+            <button className={`btn ${chartType === 'line' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setChartType('line')}><Icon name="trending-up" /> Line</button>
           </div>
         </div>
       </div>

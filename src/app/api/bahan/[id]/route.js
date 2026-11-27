@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { apiResponse, apiError } from '@/lib/utils';
 
-// UPDATE ingredient data (name, unit, minStock, category — NO stock field)
+// UPDATE ingredient data (name, unit, minStock, category - NO stock field)
 export async function PUT(request, { params }) {
   try {
     const { id } = await params;
@@ -15,7 +15,7 @@ export async function PUT(request, { params }) {
         ...(unit && { unit }),
         ...(minStock !== undefined && { minStock: parseFloat(minStock) }),
         ...(category !== undefined && { category: category || null }),
-        // NOTE: stock is intentionally NOT updated here — use PATCH for restock
+        // NOTE: stock is intentionally NOT updated here - use PATCH for restock
       },
     });
 
@@ -37,7 +37,7 @@ export async function PUT(request, { params }) {
   }
 }
 
-// RESTOCK ingredient — adds to existing stock (not replace)
+// RESTOCK ingredient - adds to existing stock (not replace)
 export async function PATCH(request, { params }) {
   try {
     const { id } = await params;

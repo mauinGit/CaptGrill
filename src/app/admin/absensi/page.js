@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { formatDate } from '@/lib/utils';
 import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
+import Icon from '@/components/Icon';
 
 export default function AbsensiAdminPage() {
   const toast = useToast();
@@ -73,7 +74,7 @@ export default function AbsensiAdminPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>📅 Absensi Karyawan</h1>
+          <h1>Absensi Karyawan</h1>
           <p>Review dan validasi absensi semua karyawan</p>
         </div>
       </div>
@@ -81,7 +82,7 @@ export default function AbsensiAdminPage() {
       {/* Filter & Search */}
       <div className="card" style={{ marginBottom: '20px' }}>
         <div className="search-box" style={{ width: '100%', marginBottom: '12px' }}>
-          <span className="search-box-icon">🔍</span>
+          <span className="search-box-icon"><Icon name="search" /></span>
           <input
             type="text"
             className="form-input"
@@ -100,9 +101,9 @@ export default function AbsensiAdminPage() {
       {/* Table for Tablet & Laptop (>= 768px) */}
       <div className="card hide-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
         ) : filteredAttendances.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">📭</div><p>Belum ada data absensi</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="inbox" /></div><p>Belum ada data absensi</p></div>
         ) : (
           <div className="table-container">
             <table>
@@ -164,14 +165,14 @@ export default function AbsensiAdminPage() {
 
                       {/* Jam Masuk */}
                       <td style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                        {a.clockIn ? new Date(a.clockIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                        {a.clockIn ? new Date(a.clockIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Belum ada'}
                       </td>
 
                       {/* Jam Keluar */}
                       <td style={{ fontWeight: '600', fontSize: '13px', color: a.clockOut ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                         {a.clockOut
                           ? new Date(a.clockOut).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-                          : '—'}
+                          : 'Belum ada'}
                       </td>
 
                       {/* Foto */}
@@ -192,7 +193,7 @@ export default function AbsensiAdminPage() {
                             onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; }}
                           />
                         ) : (
-                          <span style={{ fontSize: '20px', color: 'var(--text-tertiary)' }}>—</span>
+                          <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Tidak ada foto</span>
                         )}
                       </td>
 
@@ -201,7 +202,7 @@ export default function AbsensiAdminPage() {
                         {a.latitude && a.longitude ? (
                           <span className="badge badge-success" style={{ fontSize: '11px' }}>✓ Sesuai</span>
                         ) : (
-                          <span className="badge badge-secondary" style={{ fontSize: '11px' }}>⚠ N/A</span>
+                          <span className="badge badge-secondary" style={{ fontSize: '11px' }}><Icon name="alert" /> Tidak tersedia</span>
                         )}
                       </td>
 
@@ -240,9 +241,9 @@ export default function AbsensiAdminPage() {
       {/* Card List for Mobile HP (< 768px) */}
       <div className="show-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
         ) : filteredAttendances.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">📭</div><p>Belum ada data absensi</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="inbox" /></div><p>Belum ada data absensi</p></div>
         ) : (
           <div className="mobile-card-list">
             {filteredAttendances.map((a) => {
@@ -274,10 +275,10 @@ export default function AbsensiAdminPage() {
                   <div className="mobile-card-body">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span className={`badge ${purposeColors[a.purpose] || 'badge-secondary'}`} style={{ fontSize: '11px' }}>
-                        {a.purpose === 'Shift 1' ? '🌅' : a.purpose === 'Shift 2' ? '🌙' : '🧪'} {a.purpose || 'Shift 1'}
+                        <Icon name={a.purpose === 'Shift 2' ? 'moon' : a.purpose === 'Buat Bahan' || a.purpose === 'Membuat Bahan' ? 'flask' : 'sunrise'} /> {a.purpose || 'Shift 1'}
                       </span>
                       <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        Jam: {a.clockIn ? new Date(a.clockIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                        Jam: {a.clockIn ? new Date(a.clockIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Belum ada'}
                       </span>
                     </div>
 
@@ -294,7 +295,7 @@ export default function AbsensiAdminPage() {
                         className="btn btn-secondary btn-sm"
                         onClick={() => setPhotoPopup({ photo: a.photo, name: a.user?.name, date: a.date, time: a.clockIn })}
                       >
-                        📸 Lihat Foto
+                        <Icon name="camera" /> Lihat Foto
                       </button>
                     ) : <div />}
 
@@ -325,7 +326,7 @@ export default function AbsensiAdminPage() {
                 marginBottom: '20px',
                 fontSize: '13px',
               }}>
-                <strong>{rejectTarget.user?.name}</strong> — {formatDate(rejectTarget.date)} ({rejectTarget.purpose})
+                <strong>{rejectTarget.user?.name}</strong>, {formatDate(rejectTarget.date)} ({rejectTarget.purpose})
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Alasan Penolakan *</label>
@@ -338,7 +339,7 @@ export default function AbsensiAdminPage() {
                   rows={3}
                 />
                 <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                  💡 Alasan akan terlihat di rekap absensi. Data tidak dihapus — hanya status berubah ke Ditolak.
+                  <Icon name="lightbulb" /> Alasan akan terlihat di rekap absensi. Data tidak dihapus, hanya status berubah ke Ditolak.
                 </p>
               </div>
             </div>
@@ -349,7 +350,7 @@ export default function AbsensiAdminPage() {
                 className="btn btn-danger"
                 disabled={!rejectReason.trim() || submitting}
               >
-                {submitting ? '⏳ Memproses...' : '✗ Konfirmasi Tolak'}
+                {submitting ? 'Memproses...' : '✗ Konfirmasi Tolak'}
               </button>
             </div>
           </form>
@@ -361,7 +362,7 @@ export default function AbsensiAdminPage() {
         <div className="modal-overlay" onClick={() => setPhotoPopup(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="modal-header">
-              <h2>📸 Foto Absensi</h2>
+              <h2><Icon name="camera" /> Foto Absensi</h2>
               <button className="modal-close" onClick={() => setPhotoPopup(null)}>✕</button>
             </div>
             <div className="modal-body" style={{ textAlign: 'center', padding: '24px' }}>

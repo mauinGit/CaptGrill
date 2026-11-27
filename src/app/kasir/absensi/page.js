@@ -3,22 +3,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/Toast';
 import { haversineDistance, isLocationValid } from '@/lib/logic/absensi';
+import Icon from '@/components/Icon';
 
 const PURPOSES = [
-  { value: 'Shift 1', label: '🌅 Shift 1', icon: '🌅' },
-  { value: 'Shift 2', label: '🌙 Shift 2', icon: '🌙' },
-  { value: 'Buat Bahan', label: '🧪 Buat Bahan', icon: '🧪' },
+  { value: 'Shift 1', label: 'Shift 1', icon: 'sunrise' },
+  { value: 'Shift 2', label: 'Shift 2', icon: 'moon' },
+  { value: 'Buat Bahan', label: 'Buat Bahan', icon: 'flask' },
 ];
 
-// GPS radius — sinkron dengan MAX_ATTENDANCE_DISTANCE di .env (server-side)
-// Untuk mengubah jarak maksimal:
-//   → Buka file .env di root project
-//   → Ubah nilai MAX_ATTENDANCE_DISTANCE (dalam meter)
-//   → Contoh: MAX_ATTENDANCE_DISTANCE="200000" = 200 km
-//   → Restart server setelah mengubah
-const RESTO_LAT = -3.210016033275934;
-const RESTO_LNG = 104.65214119416274;
-const MAX_RADIUS_M = 200000; // 200 km — samakan dengan .env untuk testing
+// Koordinat resto & radius absensi diambil dari server (GET /api/absensi/config),
+// yang membaca env STORE_LATITUDE, STORE_LONGITUDE, MAX_ATTENDANCE_DISTANCE.
+// Untuk mengubah jarak: ubah env saja (lokal: .env lalu restart; Vercel: redeploy).
 
 export default function AbsensiKasirPage() {
   const toast = useToast();
@@ -40,6 +35,16 @@ export default function AbsensiKasirPage() {
   const [attendances, setAttendances] = useState({
     'Shift 1': null, 'Shift 2': null, 'Buat Bahan': null,
   });
+  // { storeLat, storeLng, maxDistance } dari env server
+  const [geoConfig, setGeoConfig] = useState(null);
+
+  // Ambil pengaturan lokasi absensi dari server
+  useEffect(() => {
+    fetch('/api/absensi/config')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((cfg) => { if (cfg) setGeoConfig(cfg); })
+      .catch(() => {});
+  }, []);
 
   // Fetch today's attendance status
   useEffect(() => {
@@ -140,18 +145,23 @@ export default function AbsensiKasirPage() {
       setLocationError('Geolocation tidak didukung browser ini');
       return;
     }
+    if (!geoConfig) {
+      setLocationError('Pengaturan lokasi resto belum termuat. Periksa koneksi lalu coba lagi.');
+      return;
+    }
+    const { storeLat, storeLng, maxDistance } = geoConfig;
     setLocationStatus('checking');
     setLocationError('');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude, accuracy } = pos.coords;
-        const dist = haversineDistance(latitude, longitude, RESTO_LAT, RESTO_LNG);
-        const valid = isLocationValid(dist, MAX_RADIUS_M);
+        const dist = haversineDistance(latitude, longitude, storeLat, storeLng);
+        const valid = isLocationValid(dist, maxDistance);
         setLocation({ latitude, longitude, accuracy });
         setLocationDistance(Math.round(dist));
         setLocationStatus(valid ? 'valid' : 'invalid');
         if (!valid) {
-          setLocationError(`Kamu berada ${Math.round(dist)}m dari resto (maks. ${MAX_RADIUS_M}m)`);
+          setLocationError(`Kamu berada ${formatDistance(Math.round(dist))} dari resto (maksimal ${formatDistance(maxDistance)})`);
         }
       },
       (err) => {
@@ -183,7 +193,7 @@ export default function AbsensiKasirPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success(`✅ Absensi ${purpose} berhasil!`);
+        toast.success(`Absensi ${purpose} berhasil!`);
         setAttendances((prev) => ({ ...prev, [purpose]: { clockIn: new Date().toISOString(), purpose } }));
         setPhoto(null);
         setLocation(null);
@@ -211,8 +221,8 @@ export default function AbsensiKasirPage() {
   if (loading) {
     return (
       <div className="animate-fade-in">
-        <div className="navbar"><div className="navbar-left"><h1>🗓️ Absensi</h1><p>{todayStr}</p></div></div>
-        <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+        <div className="navbar"><div className="navbar-left"><h1>Absensi</h1><p>{todayStr}</p></div></div>
+        <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
       </div>
     );
   }
@@ -395,7 +405,7 @@ export default function AbsensiKasirPage() {
 
       <div className="navbar">
         <div className="navbar-left">
-          <h1>🗓️ Absensi</h1>
+          <h1>Absensi</h1>
           <p>{todayStr}</p>
         </div>
       </div>
@@ -411,7 +421,7 @@ export default function AbsensiKasirPage() {
             const att = attendances[p.value];
             return (
               <div key={p.value} style={{ textAlign: 'center', flex: 1 }}>
-                <div style={{ fontSize: '22px', marginBottom: '4px' }}>{done ? '✓' : '✕'}</div>
+                <div style={{ fontSize: '22px', marginBottom: '4px', color: done ? 'var(--success)' : 'var(--text-tertiary)' }}><Icon name={done ? 'check-circle' : p.icon} /></div>
                 <div style={{ fontSize: '11px', fontWeight: '700', color: done ? 'var(--success)' : 'var(--text-tertiary)' }}>{p.label}</div>
                 {done && att?.clockIn && (
                   <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
@@ -447,9 +457,10 @@ export default function AbsensiKasirPage() {
                   opacity: done ? 0.6 : 1,
                   textDecoration: done ? 'line-through' : 'none',
                   fontFamily: 'inherit',
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
                 }}
               >
-                {p.label} {done && '✓'}
+                <Icon name={p.icon} /> {p.label} {done && <Icon name="check" />}
               </button>
             );
           })}
@@ -457,9 +468,9 @@ export default function AbsensiKasirPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-        {/* 📸 Foto — Interactive Camera */}
+        {/* Foto - Interactive Camera */}
         <div className="card">
-          <div style={{ fontSize: '13px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-secondary)' }}>📸 Foto Selfie</div>
+          <div style={{ fontSize: '13px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-secondary)' }}><Icon name="camera" /> Foto Selfie</div>
 
           {/* Live Camera Viewfinder */}
           {cameraActive && !photo && (
@@ -485,7 +496,7 @@ export default function AbsensiKasirPage() {
                     alignItems: 'center', justifyContent: 'center',
                     color: '#fff', gap: '12px',
                   }}>
-                    <div style={{ fontSize: '36px' }}>📷</div>
+                    <div style={{ fontSize: '36px' }}><Icon name="camera" /></div>
                     <div style={{ fontSize: '13px', fontWeight: '600' }}>Menyalakan kamera...</div>
                     <div style={{
                       width: '40px', height: '40px',
@@ -498,7 +509,7 @@ export default function AbsensiKasirPage() {
                   </div>
                 )}
 
-                {/* Camera overlay — subtle viewfinder corners */}
+                {/* Camera overlay - subtle viewfinder corners */}
                 {cameraReady && (
                   <div className="camera-overlay">
                     <div className="camera-corners">
@@ -563,12 +574,12 @@ export default function AbsensiKasirPage() {
                 <div className="photo-check-badge">✓</div>
               </div>
               <button className="btn btn-secondary btn-sm" style={{ marginTop: '10px', width: '100%' }} onClick={retakePhoto}>
-                🔄 Ambil Ulang Foto
+                <Icon name="refresh" /> Ambil Ulang Foto
               </button>
             </div>
           )}
 
-          {/* No photo, no camera — prompt */}
+          {/* No photo, no camera - prompt */}
           {!photo && !cameraActive && (
             <div style={{ textAlign: 'center', padding: '32px 0' }}>
               <div style={{
@@ -577,7 +588,7 @@ export default function AbsensiKasirPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 16px auto', fontSize: '36px',
               }}>
-                📷
+                <Icon name="camera" />
               </div>
               <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
                 Ambil Foto Selfie
@@ -586,7 +597,7 @@ export default function AbsensiKasirPage() {
                 Kamera akan menyala secara langsung, Anda dapat mengambil foto bebas kapan saja
               </p>
               <button className="btn btn-primary" onClick={startCamera} style={{ padding: '12px 28px', fontSize: '14px' }}>
-                📷 Buka Kamera
+                <Icon name="camera" /> Buka Kamera
               </button>
             </div>
           )}
@@ -601,9 +612,9 @@ export default function AbsensiKasirPage() {
           )}
         </div>
 
-        {/* 📍 Lokasi GPS */}
+        {/* Lokasi GPS */}
         <div className="card">
-          <div style={{ fontSize: '13px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-secondary)' }}>📍 Lokasi GPS</div>
+          <div style={{ fontSize: '13px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-secondary)' }}><Icon name="pin" /> Lokasi GPS</div>
 
           {locationStatus === null && (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
@@ -613,15 +624,15 @@ export default function AbsensiKasirPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 16px auto', fontSize: '36px',
               }}>
-                🗺️
+                <Icon name="map" />
               </div>
               <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
                 Verifikasi Lokasi
               </p>
               <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '16px' }}>
-                Radius maksimal: {formatDistance(MAX_RADIUS_M)} dari resto
+                Radius maksimal: {geoConfig ? formatDistance(geoConfig.maxDistance) : '…'} dari resto
               </p>
-              <button className="btn btn-primary" onClick={getLocation}>📍 Ambil Lokasi Sekarang</button>
+              <button className="btn btn-primary" onClick={getLocation}><Icon name="pin" /> Ambil Lokasi Sekarang</button>
             </div>
           )}
 
@@ -651,9 +662,9 @@ export default function AbsensiKasirPage() {
               }}>✓</div>
               <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--success)', marginBottom: '4px' }}>Dalam Radius!</p>
               <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                {formatDistance(locationDistance)} dari resto • max {formatDistance(MAX_RADIUS_M)}
+                {formatDistance(locationDistance)} dari resto{geoConfig && ` · maksimal ${formatDistance(geoConfig.maxDistance)}`}
               </p>
-              <button className="btn btn-secondary btn-sm" style={{ marginTop: '10px' }} onClick={getLocation}>🔄 Perbarui Lokasi</button>
+              <button className="btn btn-secondary btn-sm" style={{ marginTop: '10px' }} onClick={getLocation}><Icon name="refresh" /> Perbarui Lokasi</button>
             </div>
           )}
 
@@ -668,7 +679,7 @@ export default function AbsensiKasirPage() {
               }}>✕</div>
               <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--danger)', marginBottom: '4px' }}>Di Luar Radius</p>
               <p style={{ fontSize: '12px', color: 'var(--danger)' }}>{locationError}</p>
-              <button className="btn btn-secondary btn-sm" style={{ marginTop: '10px' }} onClick={getLocation}>🔄 Coba Lagi</button>
+              <button className="btn btn-secondary btn-sm" style={{ marginTop: '10px' }} onClick={getLocation}><Icon name="refresh" /> Coba Lagi</button>
             </div>
           )}
 
@@ -684,39 +695,12 @@ export default function AbsensiKasirPage() {
               disabled={!isFormReady || submitting || hasAttended(purpose)}
               style={{ padding: '14px', fontSize: '15px', fontWeight: '700' }}
             >
-              {submitting ? '⏳ Memproses...' : `Kirim Absensi ${purpose}`}
+              {submitting ? 'Memproses...' : `Kirim Absensi ${purpose}`}
             </button>
             {!photo && <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'center', marginTop: '6px' }}>Ambil foto terlebih dahulu</p>}
             {photo && locationStatus !== 'valid' && <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'center', marginTop: '6px' }}>Ambil lokasi GPS terlebih dahulu</p>}
           </div>
         </div>
-      </div>
-
-      {/* Info box — cara ubah jarak */}
-      <div style={{
-        marginTop: '20px', padding: '14px 16px',
-        background: 'var(--primary-glow)', borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--primary)',
-        fontSize: '12px', color: 'var(--text-secondary)',
-        lineHeight: '1.6',
-      }}>
-        <div style={{ fontWeight: '700', color: 'var(--primary)', marginBottom: '4px' }}>
-          ℹ️ Info Pengaturan Jarak
-        </div>
-        <p>
-          Radius absensi saat ini: <strong>{formatDistance(MAX_RADIUS_M)}</strong>.
-          Untuk mengubah jarak maksimal, edit file <code style={{ background: 'var(--bg-tertiary)', padding: '1px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '11px' }}>.env</code> di root project:
-        </p>
-        <code style={{
-          display: 'block', marginTop: '6px', padding: '8px 12px',
-          background: 'var(--bg-tertiary)', borderRadius: '6px',
-          fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-primary)',
-        }}>
-          MAX_ATTENDANCE_DISTANCE=&quot;200000&quot; &nbsp;← ubah angka ini (dalam meter)
-        </code>
-        <p style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
-          Juga perlu update nilai <code style={{ fontFamily: 'monospace', fontSize: '11px' }}>MAX_RADIUS_M</code> di file <code style={{ fontFamily: 'monospace', fontSize: '11px' }}>src/app/kasir/absensi/page.js</code> agar validasi client-side sinkron. Restart server setelah mengubah.
-        </p>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
+import Icon from '@/components/Icon';
 
 export default function BahanKasirPage() {
   const toast = useToast();
@@ -52,7 +53,7 @@ export default function BahanKasirPage() {
       });
 
       if (res.ok) {
-        toast.success(`Berhasil memproduksi ${selectedRecipe.name} x${quantity}! 🎉`);
+        toast.success(`Berhasil memproduksi ${selectedRecipe.name} x${quantity}!`);
         setShowConfirm(false);
         setSelectedRecipe(null);
         setQuantity(1);
@@ -76,7 +77,7 @@ export default function BahanKasirPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>🧪 Produksi Bahan</h1>
+          <h1>Produksi Bahan</h1>
           <p>Proses pembuatan bahan olahan dari bahan dasar</p>
         </div>
       </div>
@@ -88,7 +89,7 @@ export default function BahanKasirPage() {
           onClick={() => setShowMobileLogs(true)}
           style={{ justifyContent: 'space-between', padding: '10px 16px' }}
         >
-          <span>📋 Riwayat Produksi Hari Ini</span>
+          <span><Icon name="clipboard" /> Riwayat Produksi Hari Ini</span>
           <span className="badge badge-info">{productionLogs.length} item</span>
         </button>
       </div>
@@ -113,10 +114,10 @@ export default function BahanKasirPage() {
           </div>
 
           {loading ? (
-            <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat resep...</p></div>
+            <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat resep...</p></div>
           ) : filteredRecipes.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">🧪</div>
+              <div className="empty-state-icon"><Icon name="flask" /></div>
               <p>{searchQuery ? 'Resep tidak ditemukan' : 'Belum ada resep tersedia'}</p>
               <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
                 {searchQuery ? 'Coba kata kunci lain' : 'Hubungi admin untuk menambahkan resep'}
@@ -138,7 +139,7 @@ export default function BahanKasirPage() {
                   }}
                   className="pos-menu-item"
                 >
-                  <div style={{ fontSize: '28px', textAlign: 'center', marginBottom: '8px' }}>🧪</div>
+                  <div style={{ fontSize: '28px', textAlign: 'center', marginBottom: '8px' }}><Icon name="flask" /></div>
                   <div style={{ fontWeight: '700', textAlign: 'center', marginBottom: '6px', fontSize: '14px' }}>
                     {recipe.name}
                   </div>
@@ -164,13 +165,13 @@ export default function BahanKasirPage() {
         {/* Production Log for Tablet & Laptop (>= 768px) */}
         <div className="pos-cart pos-cart-desktop hide-mobile">
           <div className="pos-cart-header">
-            <h3>📜 Riwayat Produksi Hari Ini</h3>
+            <h3><Icon name="history" /> Riwayat Produksi Hari Ini</h3>
           </div>
 
           <div className="pos-cart-items">
             {productionLogs.length === 0 ? (
               <div className="pos-cart-empty">
-                <div className="pos-cart-empty-icon">📋</div>
+                <div className="pos-cart-empty-icon"><Icon name="clipboard" /></div>
                 <p>Belum ada produksi hari ini</p>
               </div>
             ) : (
@@ -178,7 +179,7 @@ export default function BahanKasirPage() {
                 <div key={log.id} className="pos-cart-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                     <div style={{ fontWeight: '600', fontSize: '13px' }}>
-                      🧪 {log.recipe?.name} x{log.quantity}
+                      <Icon name="flask" /> {log.recipe?.name} x{log.quantity}
                     </div>
                     <span className="badge badge-info" style={{ fontSize: '10px' }}>
                       {new Date(log.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
@@ -205,7 +206,7 @@ export default function BahanKasirPage() {
               <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'var(--text-tertiary)', opacity: 0.4 }} />
             </div>
             <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', textAlign: 'center' }}>
-              📋 Riwayat Produksi Hari Ini
+              <Icon name="clipboard" /> Riwayat Produksi Hari Ini
             </div>
             <div style={{ maxHeight: '60vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {productionLogs.length === 0 ? (
@@ -214,7 +215,7 @@ export default function BahanKasirPage() {
                 productionLogs.map((log) => (
                   <div key={log.id} style={{ background: 'var(--bg-tertiary)', padding: '12px', borderRadius: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>
-                      <span>🧪 {log.recipe?.name} x{log.quantity}</span>
+                      <span><Icon name="flask" /> {log.recipe?.name} x{log.quantity}</span>
                       <span className="badge badge-info" style={{ fontSize: '10px' }}>
                         {new Date(log.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                       </span>
@@ -236,12 +237,12 @@ export default function BahanKasirPage() {
         <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>🧪 Konfirmasi Produksi</h2>
+              <h2><Icon name="flask" /> Konfirmasi Produksi</h2>
               <button className="modal-close" onClick={() => setShowConfirm(false)}>✕</button>
             </div>
             <div className="modal-body">
               <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                <div style={{ fontSize: '40px', marginBottom: '8px' }}>🧪</div>
+                <div style={{ fontSize: '40px', marginBottom: '8px' }}><Icon name="flask" /></div>
                 <h3 style={{ fontSize: '18px', fontWeight: '700' }}>{selectedRecipe.name}</h3>
                 <span className="badge badge-success" style={{ marginTop: '8px', display: 'inline-block' }}>
                   → {selectedRecipe.ingredient?.name}
@@ -250,7 +251,7 @@ export default function BahanKasirPage() {
 
               {/* Composition detail */}
               <div style={{ background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}>📦 Bahan yang digunakan per produksi:</p>
+                <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}><Icon name="box" /> Bahan yang digunakan per produksi:</p>
                 {selectedRecipe.compositions?.map((c) => (
                   <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', borderBottom: '1px solid var(--border-light)' }}>
                     <span>{c.ingredient?.name}</span>
@@ -280,15 +281,15 @@ export default function BahanKasirPage() {
               {/* Summary */}
               {quantity > 0 && (
                 <div style={{ background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '16px' }}>
-                  <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}>📊 Ringkasan (x{quantity}):</p>
+                  <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}><Icon name="bar-chart" /> Ringkasan (x{quantity}):</p>
                   {selectedRecipe.compositions?.map((c) => (
                     <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: '13px' }}>
-                      <span style={{ color: 'var(--danger)' }}>⬇ {c.ingredient?.name}</span>
+                      <span style={{ color: 'var(--danger)' }}><Icon name="arrow-down" /> {c.ingredient?.name}</span>
                       <span style={{ fontWeight: '600', color: 'var(--danger)' }}>-{c.quantity * quantity} {c.ingredient?.unit}</span>
                     </div>
                   ))}
                   <div style={{ borderTop: '2px solid var(--border)', paddingTop: '8px', marginTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', color: 'var(--success)' }}>
-                    <span>⬆ {selectedRecipe.ingredient?.name}</span>
+                    <span><Icon name="arrow-up" /> {selectedRecipe.ingredient?.name}</span>
                     <span>+{quantity} {selectedRecipe.ingredient?.unit}</span>
                   </div>
                 </div>
@@ -297,7 +298,7 @@ export default function BahanKasirPage() {
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setShowConfirm(false)}>Batal</button>
               <button className="btn btn-success" onClick={handleSubmit} disabled={submitting}>
-                {submitting ? '⏳ Memproses...' : '✅ Proses Produksi'}
+                {submitting ? 'Memproses...' : 'Proses Produksi'}
               </button>
             </div>
           </div>

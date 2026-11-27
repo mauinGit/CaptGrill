@@ -1,5 +1,5 @@
 /**
- * Section 16.2 & 16.3 — Produksi Bahan
+ * Section 16.2 & 16.3 - Produksi Bahan
  * - Kartu resep disabled kalau ada 1 bahan dasar yang tidak cukup untuk 1x produksi.
  * - Jumlah Produksi maksimal dibatasi oleh bahan dasar yang paling terbatas.
  */
