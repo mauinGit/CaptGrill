@@ -3,14 +3,15 @@
 import { useEffect, useState, Fragment } from 'react';
 import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
+import Icon from '@/components/Icon';
 
 const UNITS = ['pcs', 'gram', 'kg', 'ml', 'liter', 'butir', 'lembar', 'sachet'];
 
 function StockBadge({ stock, minStock }) {
   const s = parseFloat(stock);
   const m = parseFloat(minStock);
-  if (s === 0) return <span className="badge badge-danger" style={{ fontSize: '11px' }}>⛔ Habis</span>;
-  if (s <= m) return <span className="badge badge-warning" style={{ fontSize: '11px' }}>⚠ Menipis</span>;
+  if (s === 0) return <span className="badge badge-danger" style={{ fontSize: '11px' }}><Icon name="ban" /> Habis</span>;
+  if (s <= m) return <span className="badge badge-warning" style={{ fontSize: '11px' }}><Icon name="alert" /> Menipis</span>;
   return <span className="badge badge-success" style={{ fontSize: '11px' }}>✓ Aman</span>;
 }
 
@@ -235,7 +236,7 @@ export default function BahanPage() {
       )}
 
       <div className="form-group">
-        <label className="form-label">Min. Stok (Batas Peringatan) *</label>
+        <label className="form-label">Stok Minimum (Batas Peringatan) *</label>
         <input
           type="number"
           step="0.01"
@@ -246,7 +247,7 @@ export default function BahanPage() {
           placeholder="5"
         />
         <small style={{ color: 'var(--text-tertiary)', fontSize: '11px', marginTop: '4px', display: 'block' }}>
-          💡 Peringatan &quot;Stok Menipis&quot; akan muncul jika stok di bawah angka ini.
+          <Icon name="lightbulb" /> Peringatan &quot;Stok Menipis&quot; akan muncul jika stok di bawah angka ini.
         </small>
       </div>
 
@@ -259,7 +260,7 @@ export default function BahanPage() {
           color: 'var(--text-secondary)',
           marginTop: '8px',
         }}>
-          💡 <strong>Stok tidak diubah di sini.</strong> Untuk menambah stok, gunakan tombol <strong>📦 Restock</strong>.
+          <Icon name="lightbulb" /> <strong>Stok tidak diubah di sini.</strong> Untuk menambah stok, gunakan tombol <strong><Icon name="box" /> Restock</strong>.
         </div>
       )}
     </>
@@ -269,7 +270,7 @@ export default function BahanPage() {
     <div className="animate-fade-in page-container-responsive">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>🧂 Manajemen Bahan</h1>
+          <h1>Manajemen Bahan</h1>
           <p>Kelola stok bahan baku CaptGrill</p>
         </div>
       </div>
@@ -278,7 +279,7 @@ export default function BahanPage() {
       <div className="toolbar">
         <div className="toolbar-left">
           <div className="search-box" style={{ maxWidth: '300px', width: '100%' }}>
-            <span className="search-box-icon">🔍</span>
+            <span className="search-box-icon"><Icon name="search" /></span>
             <input
               type="text"
               className="form-input"
@@ -290,8 +291,8 @@ export default function BahanPage() {
           </div>
         </div>
         <div className="toolbar-right">
-          <button className="btn btn-secondary" onClick={openCopyModal}>📋 Salin Catatan</button>
-          <button className="btn btn-primary hide-mobile" onClick={openAdd}>➕ Tambah Bahan</button>
+          <button className="btn btn-secondary" onClick={openCopyModal}><Icon name="clipboard" /> Salin Catatan</button>
+          <button className="btn btn-primary hide-mobile" onClick={openAdd}><Icon name="plus" /> Tambah Bahan</button>
         </div>
       </div>
 
@@ -351,12 +352,12 @@ export default function BahanPage() {
             cursor: 'pointer',
           }}
         >
-          <option value="Semua">📁 Semua Kategori ({ingredients.length})</option>
+          <option value="Semua">Semua Kategori ({ingredients.length})</option>
           {categories.map((cat) => (
-            <option key={cat} value={cat}>📁 {cat}</option>
+            <option key={cat} value={cat}>{cat}</option>
           ))}
           <option value="__ADD_NEW__" style={{ fontWeight: '700', color: 'var(--primary)' }}>
-            ➕ Tambah Kategori Baru...
+            Tambah Kategori Baru...
           </option>
         </select>
       </div>
@@ -364,9 +365,9 @@ export default function BahanPage() {
       {/* Table view for Tablet and Laptop (>=768px) */}
       <div className="card hide-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat data...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat data...</p></div>
         ) : ingredients.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">📦</div><p>Belum ada data bahan</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="box" /></div><p>Belum ada data bahan</p></div>
         ) : (
           <div className="table-container">
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -375,7 +376,7 @@ export default function BahanPage() {
                   <th style={{ width: '22%' }}>Nama Bahan</th>
                   <th style={{ width: '10%' }}>Satuan</th>
                   <th style={{ width: '22%' }}>Stok</th>
-                  <th style={{ width: '12%' }}>Min. Stok</th>
+                  <th style={{ width: '12%' }}>Stok Minimum</th>
                   <th style={{ width: '14%' }}>Status</th>
                   <th className="col-aksi" style={{ width: '20%', minWidth: '130px', textAlign: 'center' }}>Aksi</th>
                 </tr>
@@ -393,7 +394,7 @@ export default function BahanPage() {
                         borderBottom: '2px solid #f3e5a0',
                         letterSpacing: '0.5px',
                       }}>
-                        📁 {cat}
+                        <Icon name="folder" /> {cat}
                       </td>
                     </tr>
                     {items.map((item) => (
@@ -419,18 +420,18 @@ export default function BahanPage() {
                               className="btn btn-secondary btn-sm icon-btn"
                               onClick={() => openEdit(item)}
                               title="Edit data bahan"
-                            >✏️</button>
+                            ><Icon name="pencil" /></button>
                             <button
                               className="btn btn-sm icon-btn"
                               style={{ background: 'var(--primary-glow)', color: 'var(--primary)', border: '1px solid rgba(35,114,39,0.2)' }}
                               onClick={() => openRestock(item)}
                               title="Restock / tambah stok"
-                            >📦</button>
+                            ><Icon name="box" /></button>
                             <button
                               className="btn btn-danger btn-sm icon-btn"
                               onClick={() => handleDelete(item.id, item.name)}
                               title="Hapus bahan"
-                            >🗑️</button>
+                            ><Icon name="trash" /></button>
                           </div>
                         </td>
                       </tr>
@@ -446,9 +447,9 @@ export default function BahanPage() {
       {/* Card list view for HP (< 768px) */}
       <div className="show-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat data...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat data...</p></div>
         ) : ingredients.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">📦</div><p>Belum ada data bahan</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="box" /></div><p>Belum ada data bahan</p></div>
         ) : (
           <div className="mobile-card-list">
             {Object.entries(grouped).map(([cat, items]) => (
@@ -462,7 +463,7 @@ export default function BahanPage() {
                   borderRadius: '6px',
                   marginBottom: '8px',
                 }}>
-                  📁 {cat}
+                  <Icon name="folder" /> {cat}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
                   {items.map((item) => (
@@ -517,21 +518,21 @@ export default function BahanPage() {
                 onClick={() => openRestock(actionSheetItem)}
                 style={{ justifyContent: 'center' }}
               >
-                📦 Restock Stok
+                <Icon name="box" /> Restock Stok
               </button>
               <button
                 className="btn btn-secondary"
                 onClick={() => openEdit(actionSheetItem)}
                 style={{ justifyContent: 'center' }}
               >
-                ✏️ Edit Data Bahan
+                <Icon name="pencil" /> Edit Data Bahan
               </button>
               <button
                 className="btn btn-danger"
                 onClick={() => handleDelete(actionSheetItem.id, actionSheetItem.name)}
                 style={{ justifyContent: 'center' }}
               >
-                🗑️ Hapus Bahan
+                <Icon name="trash" /> Hapus Bahan
               </button>
             </div>
           </div>
@@ -567,7 +568,7 @@ export default function BahanPage() {
             <div className="side-panel-overlay" onClick={() => setEditModal(false)}>
               <div className="side-panel" onClick={(e) => e.stopPropagation()}>
                 <div className="side-panel-header">
-                  <h3 style={{ fontSize: '16px', fontWeight: '700' }}>➕ Tambah Bahan Baru</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: '700' }}><Icon name="plus" /> Tambah Bahan Baru</h3>
                   <button className="modal-close" onClick={() => setEditModal(false)}>✕</button>
                 </div>
                 <div className="side-panel-body">
@@ -585,7 +586,7 @@ export default function BahanPage() {
 
           {/* Laptop Modal Dialog (>= 1024px) */}
           <div className="hide-mobile hide-tablet">
-            <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="➕ Tambah Bahan Baru">
+            <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Tambah Bahan Baru">
               <form onSubmit={handleEditSubmit}>
                 <div className="modal-body">
                   {renderAddEditFields()}
@@ -602,7 +603,7 @@ export default function BahanPage() {
 
       {/* Edit Modal (Dialog for all devices per spec 5.7) */}
       {editModal && !isAdding && (
-        <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="✏️ Edit Data Bahan">
+        <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Edit Data Bahan">
           <form onSubmit={handleEditSubmit}>
             <div className="modal-body">
               {renderAddEditFields()}
@@ -617,7 +618,7 @@ export default function BahanPage() {
 
       {/* Restock Modal */}
       {restockModal && selectedItem && (
-        <Modal isOpen={restockModal} onClose={() => setRestockModal(false)} title={`📦 Restock Stok — ${selectedItem.name}`}>
+        <Modal isOpen={restockModal} onClose={() => setRestockModal(false)} title={`Restock Stok: ${selectedItem.name}`}>
           <form onSubmit={handleRestock}>
             <div className="modal-body">
               <div style={{
@@ -695,7 +696,7 @@ export default function BahanPage() {
 
       {/* Copy Note Modal */}
       {copyModal && (
-        <Modal isOpen={copyModal} onClose={() => setCopyModal(false)} title="📋 Preview Catatan Bahan">
+        <Modal isOpen={copyModal} onClose={() => setCopyModal(false)} title="Preview Catatan Bahan">
           <div className="modal-body">
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
               Berikut adalah daftar semua bahan yang dikelompokkan per kategori untuk disalin:
@@ -710,7 +711,7 @@ export default function BahanPage() {
           </div>
           <div className="modal-footer">
             <button className="btn btn-secondary" onClick={() => setCopyModal(false)}>Batal</button>
-            <button className="btn btn-primary" onClick={handleCopy}>📋 Salin ke Clipboard</button>
+            <button className="btn btn-primary" onClick={handleCopy}><Icon name="clipboard" /> Salin ke Clipboard</button>
           </div>
         </Modal>
       )}

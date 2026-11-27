@@ -1,5 +1,5 @@
 /**
- * Section 12.1 & 11.4 — Perhitungan Gaji Karyawan
+ * Section 12.1 & 11.4 - Perhitungan Gaji Karyawan
  *
  * - Gaji Shift    = jumlah absensi valid (Tujuan Shift 1/Shift 2) x rateShift
  * - Gaji Produksi = jumlah absensi valid (Tujuan Buat Bahan) x rateProduksi

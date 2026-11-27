@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
 import { formatCurrency } from '@/lib/utils';
+import Icon from '@/components/Icon';
 
 const MONTH_NAMES = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -82,12 +83,12 @@ export default function GajiPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>💰 Gaji Karyawan</h1>
+          <h1>Gaji Karyawan</h1>
           <p>Perhitungan gaji berdasarkan absensi shift & produksi bahan</p>
         </div>
         <div className="navbar-right">
           <button className="btn btn-primary hide-mobile" onClick={() => { setForm({ userId: '', period: currentPeriod, shiftRate: '50000', produksiRate: '30000', bonus: '0', bonusNote: '' }); setModalOpen(true); }}>
-            ➕ Hitung Gaji
+            <Icon name="plus" /> Hitung Gaji
           </button>
         </div>
       </div>
@@ -95,9 +96,9 @@ export default function GajiPage() {
       {/* Table view for Tablet & Laptop (>= 768px) */}
       <div className="card hide-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
         ) : salaries.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">💰</div><p>Belum ada data gaji</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="coins" /></div><p>Belum ada data gaji</p></div>
         ) : (
           <div className="table-container">
             <table>
@@ -145,13 +146,13 @@ export default function GajiPage() {
                       <td style={{ fontWeight: '700', color: 'var(--success)' }}>{formatCurrency(s.totalSalary)}</td>
                       <td>
                         {isPaid ? (
-                          <span className="badge badge-success" style={{ fontSize: '11px' }}>🔒 Dibayar</span>
+                          <span className="badge badge-success" style={{ fontSize: '11px' }}><Icon name="lock" /> Dibayar</span>
                         ) : (
                           <span className="badge badge-warning" style={{ fontSize: '11px' }}>Draft</span>
                         )}
                       </td>
                       <td>
-                        <button className="btn btn-secondary btn-sm" onClick={() => setDetailData(s)}>📋</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => setDetailData(s)}><Icon name="clipboard" /></button>
                       </td>
                     </tr>
                   );
@@ -165,9 +166,9 @@ export default function GajiPage() {
       {/* Card List for Mobile HP (< 768px) */}
       <div className="show-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
         ) : salaries.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">💰</div><p>Belum ada data gaji</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="coins" /></div><p>Belum ada data gaji</p></div>
         ) : (
           <div className="mobile-card-list">
             {salaries.map((s) => {
@@ -180,7 +181,7 @@ export default function GajiPage() {
                       <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Periode: {formatPeriod(s.period)}</div>
                     </div>
                     {isPaid ? (
-                      <span className="badge badge-success" style={{ fontSize: '10px' }}>🔒 Dibayar</span>
+                      <span className="badge badge-success" style={{ fontSize: '10px' }}><Icon name="lock" /> Dibayar</span>
                     ) : (
                       <span className="badge badge-warning" style={{ fontSize: '10px' }}>Draft</span>
                     )}
@@ -224,27 +225,27 @@ export default function GajiPage() {
         <div className="modal-overlay" onClick={() => setDetailData(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="modal-header">
-              <h2>📋 Detail Gaji: {detailData.user?.name}</h2>
+              <h2><Icon name="clipboard" /> Detail Gaji: {detailData.user?.name}</h2>
               <button className="modal-close" onClick={() => setDetailData(null)}>✕</button>
             </div>
             <div className="modal-body">
               <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
                 Periode: <strong>{formatPeriod(detailData.period)}</strong>
-                {detailData.status === 'PAID' && <span className="badge badge-success" style={{ marginLeft: '8px', fontSize: '10px' }}>🔒 Dibayar</span>}
+                {detailData.status === 'PAID' && <span className="badge badge-success" style={{ marginLeft: '8px', fontSize: '10px' }}><Icon name="lock" /> Dibayar</span>}
               </p>
 
               <div style={{ background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span>🕐 Gaji Shift ({detailData.shiftDays || 0} hari × {formatCurrency(detailData.shiftRate || detailData.dailyRate)})</span>
+                  <span><Icon name="clock" /> Gaji Shift ({detailData.shiftDays || 0} hari × {formatCurrency(detailData.shiftRate || detailData.dailyRate)})</span>
                   <strong>{formatCurrency(detailData.gajiShift || 0)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span>🍳 Gaji Produksi ({detailData.produksiDays || 0} kali × {formatCurrency(detailData.produksiRate || 0)})</span>
+                  <span><Icon name="flame" /> Gaji Produksi ({detailData.produksiDays || 0} kali × {formatCurrency(detailData.produksiRate || 0)})</span>
                   <strong>{formatCurrency(detailData.gajiProduksi || 0)}</strong>
                 </div>
                 {(detailData.bonus || 0) > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span>🎁 Bonus {detailData.bonusNote ? `(${detailData.bonusNote})` : ''}</span>
+                    <span><Icon name="gift" /> Bonus {detailData.bonusNote ? `(${detailData.bonusNote})` : ''}</span>
                     <strong style={{ color: 'var(--primary)' }}>{formatCurrency(detailData.bonus)}</strong>
                   </div>
                 )}
@@ -262,7 +263,7 @@ export default function GajiPage() {
                   onClick={() => handlePay(detailData.id)}
                   disabled={paying}
                 >
-                  {paying ? '⏳...' : '✓ Tandai Sudah Dibayar'}
+                  {paying ? 'Memproses...' : <><Icon name="check" /> Tandai Sudah Dibayar</>}
                 </button>
               )}
             </div>
@@ -287,20 +288,20 @@ export default function GajiPage() {
             </div>
 
             <div style={{ background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '16px', marginTop: '8px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: 'var(--text-primary)' }}>💰 Komponen Gaji</p>
+              <p style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px', color: 'var(--text-primary)' }}><Icon name="coins" /> Komponen Gaji</p>
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">🕐 Rate Shift / Hari (Rp)</label>
+                  <label className="form-label"><Icon name="clock" /> Rate Shift / Hari (Rp)</label>
                   <input type="number" className="form-input" value={form.shiftRate} onChange={(e) => setForm({ ...form, shiftRate: e.target.value })} placeholder="50000" />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">🍳 Rate Produksi / Kali (Rp)</label>
+                  <label className="form-label"><Icon name="flame" /> Rate Produksi / Kali (Rp)</label>
                   <input type="number" className="form-input" value={form.produksiRate} onChange={(e) => setForm({ ...form, produksiRate: e.target.value })} placeholder="30000" />
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">🎁 Bonus (Rp)</label>
+                  <label className="form-label"><Icon name="gift" /> Bonus (Rp)</label>
                   <input type="number" className="form-input" value={form.bonus} onChange={(e) => setForm({ ...form, bonus: e.target.value })} placeholder="0" />
                 </div>
                 <div className="form-group">
@@ -312,7 +313,7 @@ export default function GajiPage() {
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>Batal</button>
-            <button type="submit" className="btn btn-primary">💰 Hitung</button>
+            <button type="submit" className="btn btn-primary"><Icon name="coins" /> Hitung</button>
           </div>
         </form>
       </Modal>

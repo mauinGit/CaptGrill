@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback } from 'react';
+import Icon from './Icon';
 
 const ToastContext = createContext();
 
@@ -31,9 +32,9 @@ export function ToastProvider({ children }) {
       <div className="toast-container">
         {toasts.map((t) => (
           <div key={t.id} className={`toast toast-${t.type}`}>
-            {t.type === 'success' && '✅'}
-            {t.type === 'error' && '❌'}
-            {t.type === 'warning' && '⚠️'}
+            {t.type === 'success' && <Icon name="check-circle" />}
+            {t.type === 'error' && <Icon name="x-circle" />}
+            {t.type === 'warning' && <Icon name="alert" />}
             {t.message}
           </div>
         ))}

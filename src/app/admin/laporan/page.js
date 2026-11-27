@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
 import Modal from '@/components/Modal';
 import * as XLSX from 'xlsx';
+import Icon from '@/components/Icon';
 
 const PAGE_SIZE = 10;
 
@@ -106,7 +107,7 @@ export default function LaporanPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>📋 Laporan Keuangan</h1>
+          <h1>Laporan Keuangan</h1>
           <p>Laporan pemasukan dan pengeluaran</p>
         </div>
       </div>
@@ -121,7 +122,7 @@ export default function LaporanPage() {
             <button className="btn btn-success btn-excel" onClick={exportToExcel}>Export Excel</button>
           )}
           <button className="btn btn-primary" onClick={fetchReport} disabled={loading}>
-            {loading ? '⏳' : '🔍'} Tampilkan
+            <Icon name={loading ? 'loader' : 'search'} /> Tampilkan
           </button>
         </div>
       </div>
@@ -131,14 +132,14 @@ export default function LaporanPage() {
           {/* Main Summary */}
           <div className="summary-grid summary-grid-1col-mobile">
             <div className="summary-card">
-              <div className="summary-card-icon green">💰</div>
+              <div className="summary-card-icon green"><Icon name="coins" /></div>
               <div className="summary-card-info">
                 <h3>Total Pemasukan</h3>
                 <div className="value text-success">{formatCurrency(data.totalIncome)}</div>
               </div>
             </div>
             <div className="summary-card">
-              <div className="summary-card-icon red">💸</div>
+              <div className="summary-card-icon red"><Icon name="wallet" /></div>
               <div className="summary-card-info">
                 <h3>Total Pengeluaran</h3>
                 <div className="value text-danger">{formatCurrency(data.totalExpense)}</div>
@@ -146,7 +147,7 @@ export default function LaporanPage() {
             </div>
             <div className="summary-card">
               <div className={`summary-card-icon ${data.profit >= 0 ? 'green' : 'red'}`}>
-                {data.profit >= 0 ? '📈' : '📉'}
+                <Icon name={data.profit >= 0 ? 'trending-up' : 'trending-down'} />
               </div>
               <div className="summary-card-info">
                 <h3>Laba / Rugi</h3>
@@ -174,7 +175,7 @@ export default function LaporanPage() {
           {/* Transactions Table Card */}
           <div className="card" style={{ marginTop: '20px' }}>
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <h3 className="card-title">💰 Transaksi ({filteredTransactions.length})</h3>
+              <h3 className="card-title"><Icon name="coins" /> Transaksi ({filteredTransactions.length})</h3>
               <div className="btn-group">
                 {['Semua', 'Shift 1', 'Shift 2'].map((s) => (
                   <button
@@ -182,7 +183,7 @@ export default function LaporanPage() {
                     className={`btn ${shiftFilter === s ? 'btn-primary' : 'btn-secondary'} btn-sm`}
                     onClick={() => { setShiftFilter(s); setTxPage(1); }}
                   >
-                    {s === 'Shift 1' ? '🌅 ' : s === 'Shift 2' ? '🌙 ' : ''}{s}
+                    {s === 'Shift 1' && <Icon name="sunrise" />}{s === 'Shift 2' && <Icon name="moon" />} {s}
                   </button>
                 ))}
               </div>
@@ -216,15 +217,15 @@ export default function LaporanPage() {
                           <td><span className="badge badge-info" style={{ fontSize: '10px' }}>{t.paymentMethod || 'Cash'}</span></td>
                           <td>
                             <span className={`badge ${getTransactionShift(t.createdAt) === 'Shift 1' ? 'badge-warning' : 'badge-info'}`} style={{ fontSize: '10px' }}>
-                              {getTransactionShift(t.createdAt) === 'Shift 1' ? '🌅' : '🌙'} {getTransactionShift(t.createdAt)}
+                              <Icon name={getTransactionShift(t.createdAt) === 'Shift 1' ? 'sunrise' : 'moon'} /> {getTransactionShift(t.createdAt)}
                             </span>
                           </td>
                           <td className="font-bold text-success">{formatCurrency(t.finalPrice)}</td>
                           <td style={{ textAlign: 'center' }}>
-                            <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setDetailModalItem(t)} title="Detail Pesanan">🔍</button>
+                            <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setDetailModalItem(t)} title="Detail Pesanan"><Icon name="search" /></button>
                           </td>
                           <td style={{ textAlign: 'center' }}>
-                            <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setReceiptData(t)} title="Preview Struk">🧾</button>
+                            <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setReceiptData(t)} title="Preview Struk"><Icon name="receipt" /></button>
                           </td>
                         </tr>
                       ))}
@@ -250,12 +251,12 @@ export default function LaporanPage() {
                           </td>
                           <td style={{ textAlign: 'center' }}>
                             <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setDetailModalItem(t)} title="Detail Pesanan">
-                              🔍
+                              <Icon name="search" />
                             </button>
                           </td>
                           <td style={{ textAlign: 'center' }}>
                             <button className="btn btn-secondary btn-sm icon-btn" onClick={() => setReceiptData(t)} title="Preview Struk">
-                              🧾
+                              <Icon name="receipt" />
                             </button>
                           </td>
                         </tr>
@@ -295,8 +296,8 @@ export default function LaporanPage() {
               padding: '10px 14px',
               borderRadius: 'var(--radius-md)',
             }}>
-              <div>👤 Kasir: <strong>{detailModalItem.user?.name || '-'}</strong></div>
-              <div>💳 Metode: <strong>{detailModalItem.paymentMethod || 'Cash'}</strong> | ⏱️ Shift: <strong>{getTransactionShift(detailModalItem.createdAt)}</strong></div>
+              <div><Icon name="user" /> Kasir: <strong>{detailModalItem.user?.name || '-'}</strong></div>
+              <div><Icon name="card" /> Metode: <strong>{detailModalItem.paymentMethod || 'Cash'}</strong> | Shift: <strong>{getTransactionShift(detailModalItem.createdAt)}</strong></div>
             </div>
 
             <div>
@@ -306,7 +307,7 @@ export default function LaporanPage() {
                   <thead>
                     <tr>
                       <th>Menu</th>
-                      <th style={{ textAlign: 'center' }}>Qty</th>
+                      <th style={{ textAlign: 'center' }}>Jumlah</th>
                       <th style={{ textAlign: 'right' }}>Harga</th>
                       <th style={{ textAlign: 'right' }}>Subtotal</th>
                     </tr>
@@ -349,7 +350,7 @@ export default function LaporanPage() {
         <div className="modal-overlay" onClick={() => setReceiptData(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div className="modal-header">
-              <h2>🧾 Struk Transaksi</h2>
+              <h2><Icon name="receipt" /> Struk Transaksi</h2>
               <button className="modal-close" onClick={() => setReceiptData(null)}>✕</button>
             </div>
             <div className="modal-body">
@@ -439,7 +440,7 @@ export default function LaporanPage() {
               </div>
             </div>
             <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
-              <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ Cetak</button>
+              <button className="btn btn-primary btn-sm" onClick={() => window.print()}><Icon name="printer" /> Cetak</button>
               <button className="btn btn-secondary btn-sm" onClick={() => setReceiptData(null)}>Tutup</button>
             </div>
           </div>

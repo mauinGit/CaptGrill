@@ -75,6 +75,6 @@ export const config = {
   // Lewati file statis dari /public (logo, gambar, font) supaya tetap bisa
   // dimuat di halaman login sebelum user punya token.
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpe?g|gif|webp|svg|ico|woff2?)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpe?g|gif|webp|svg|ico|woff2?|webmanifest)$).*)',
   ],
 };

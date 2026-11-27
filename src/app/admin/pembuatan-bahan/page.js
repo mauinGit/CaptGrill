@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
+import Icon from '@/components/Icon';
 
 export default function PembuatanBahanPage() {
   const toast = useToast();
@@ -122,7 +123,7 @@ export default function PembuatanBahanPage() {
           type="text"
           className="form-input"
           list="result-ingredients-list"
-          placeholder="🔍 Ketik atau pilih bahan hasil..."
+          placeholder="Ketik atau pilih bahan hasil..."
           value={
             ingredients.find((i) => i.id.toString() === form.ingredientId)?.name ||
             form.ingredientSearch ||
@@ -151,14 +152,14 @@ export default function PembuatanBahanPage() {
           ))}
         </datalist>
         <small style={{ color: 'var(--text-tertiary)', fontSize: '11px', marginTop: '4px', display: 'block' }}>
-          {editItem ? '🔒 Bahan hasil tidak bisa diubah saat edit' : '💡 Ketik nama bahan untuk mencari tanpa perlu scroll panjang'}
+          {editItem ? 'Bahan hasil tidak bisa diubah saat edit' : 'Ketik nama bahan untuk mencari tanpa perlu scroll panjang'}
         </small>
       </div>
 
       <div style={{ marginTop: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <label className="form-label" style={{ margin: 0 }}>Komposisi Bahan Dasar</label>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={addComposition}>➕ Tambah Bahan</button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={addComposition}><Icon name="plus" /> Tambah Bahan</button>
         </div>
         {form.compositions.length === 0 && (
           <p style={{ color: 'var(--text-tertiary)', fontSize: '12px', textAlign: 'center', padding: '16px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
@@ -174,7 +175,7 @@ export default function PembuatanBahanPage() {
                   type="text"
                   className="form-input"
                   list={`comp-list-${index}`}
-                  placeholder="🔍 Ketik bahan dasar..."
+                  placeholder="Ketik bahan dasar..."
                   value={currentIng?.name || comp.searchName || ''}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -223,7 +224,7 @@ export default function PembuatanBahanPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>🧪 Pembuatan Bahan</h1>
+          <h1>Pembuatan Bahan</h1>
           <p>Kelola resep pembuatan bahan olahan dari bahan dasar</p>
         </div>
       </div>
@@ -232,7 +233,7 @@ export default function PembuatanBahanPage() {
       <div className="toolbar">
         <div className="toolbar-left">
           <div className="search-box" style={{ maxWidth: '320px', width: '100%' }}>
-            <span className="search-box-icon">🔍</span>
+            <span className="search-box-icon"><Icon name="search" /></span>
             <input
               type="text"
               className="form-input"
@@ -244,16 +245,16 @@ export default function PembuatanBahanPage() {
           </div>
         </div>
         <div className="toolbar-right">
-          <button className="btn btn-primary hide-mobile" onClick={openAdd}>➕ Tambah Resep</button>
+          <button className="btn btn-primary hide-mobile" onClick={openAdd}><Icon name="plus" /> Tambah Resep</button>
         </div>
       </div>
 
       {/* Table view for Tablet & Laptop (>= 768px) */}
       <div className="card hide-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat data...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat data...</p></div>
         ) : recipes.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">🧪</div><p>Belum ada resep pembuatan bahan</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="flask" /></div><p>Belum ada resep pembuatan bahan</p></div>
         ) : (
           <div className="table-container">
             <table>
@@ -285,8 +286,8 @@ export default function PembuatanBahanPage() {
                     </td>
                     <td>
                       <div className="btn-group">
-                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}>✏️</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>🗑️</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}><Icon name="pencil" /></button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}><Icon name="trash" /></button>
                       </div>
                     </td>
                   </tr>
@@ -300,9 +301,9 @@ export default function PembuatanBahanPage() {
       {/* Card list view for HP (< 768px) */}
       <div className="show-mobile">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat data...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat data...</p></div>
         ) : recipes.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">🧪</div><p>Belum ada resep pembuatan bahan</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="flask" /></div><p>Belum ada resep pembuatan bahan</p></div>
         ) : (
           <div className="mobile-card-list">
             {recipes.map((item) => (
@@ -325,8 +326,8 @@ export default function PembuatanBahanPage() {
                 <div className="mobile-card-footer">
                   <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Hasil: {item.ingredient?.unit}</span>
                   <div className="btn-group">
-                    <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}>✏️ Edit</button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>🗑️ Hapus</button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}><Icon name="pencil" /> Edit</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}><Icon name="trash" /> Hapus</button>
                   </div>
                 </div>
               </div>
@@ -369,7 +370,7 @@ export default function PembuatanBahanPage() {
             <div className="side-panel-overlay" onClick={() => setModalOpen(false)}>
               <div className="side-panel" onClick={(e) => e.stopPropagation()}>
                 <div className="side-panel-header">
-                  <h3 style={{ fontSize: '16px', fontWeight: '700' }}>➕ Tambah Resep Baru</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: '700' }}><Icon name="plus" /> Tambah Resep Baru</h3>
                   <button className="modal-close" onClick={() => setModalOpen(false)}>✕</button>
                 </div>
                 <div className="side-panel-body">
@@ -387,7 +388,7 @@ export default function PembuatanBahanPage() {
 
           {/* Laptop Modal Dialog (>= 1024px) */}
           <div className="hide-mobile hide-tablet">
-            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="➕ Tambah Resep Baru" size="lg">
+            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Tambah Resep Baru" size="lg">
               <form onSubmit={handleSubmit}>
                 <div className="modal-body">
                   {renderFormFields()}
@@ -404,7 +405,7 @@ export default function PembuatanBahanPage() {
 
       {/* Edit Modal (Dialog for all devices) */}
       {modalOpen && editItem && (
-        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="✏️ Edit Resep" size="lg">
+        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Edit Resep" size="lg">
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
               {renderFormFields()}

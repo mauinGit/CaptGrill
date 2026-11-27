@@ -1,5 +1,5 @@
 /**
- * Section 4 — Validasi Stok Transaksi
+ * Section 4 - Validasi Stok Transaksi
  *
  * Aturan:
  * - Cek SEMUA bahan dulu (untuk semua item di cart, dikali qty) sebelum
@@ -36,7 +36,7 @@ export function validateStockForTransaction(cartItems, menuCompositions, current
 
 /**
  * Terapkan pengurangan stok HANYA jika validasi lolos (atomic commit).
- * Melempar error kalau dipanggil dalam kondisi tidak valid — mencegah
+ * Melempar error kalau dipanggil dalam kondisi tidak valid - mencegah
  * pemanggil tidak sengaja memotong stok sebagian.
  */
 export function commitStockDeduction(cartItems, menuCompositions, currentStock) {

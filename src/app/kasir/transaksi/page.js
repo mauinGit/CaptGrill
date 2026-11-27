@@ -5,6 +5,7 @@ import { useToast } from '@/components/Toast';
 import { formatCurrency } from '@/lib/utils';
 import { useBluetooth } from '@/components/BluetoothPrinter';
 import { calcCartTotal, calcFinalTotal, calcKembalian, canConfirmPayment } from '@/lib/logic/cart';
+import Icon from '@/components/Icon';
 
 const PAYMENT_METHODS = ['Cash', 'QRIS', 'Grab', 'GoFood'];
 
@@ -74,7 +75,7 @@ export default function TransaksiPage() {
 
       if (res.ok) {
         const result = await res.json();
-        toast.success('Transaksi berhasil! 🎉');
+        toast.success('Transaksi berhasil!');
 
         const successData = {
           orderNumber: result.orderNumber || `#${result.id}`,
@@ -101,7 +102,7 @@ export default function TransaksiPage() {
               change: successData.change,
               transactionDate: new Date().toISOString(),
             });
-            toast.success('🖨️ Struk dicetak!');
+            toast.success('Struk dicetak!');
           } catch (printErr) {
             toast.error('Gagal mencetak: ' + (printErr.message || ''));
           }
@@ -146,7 +147,7 @@ export default function TransaksiPage() {
           change: successState.change,
           transactionDate: new Date().toISOString(),
         });
-        toast.success('🖨️ Struk dicetak!');
+        toast.success('Struk dicetak!');
       } catch (printErr) {
         toast.error('Gagal mencetak: ' + (printErr.message || ''));
       }
@@ -161,7 +162,7 @@ export default function TransaksiPage() {
     <div className="animate-fade-in">
       <div className="navbar" style={{ marginBottom: '12px', paddingBottom: '8px' }}>
         <div className="navbar-left">
-          <h1 style={{ fontSize: '20px' }}>🛒 Transaksi</h1>
+          <h1 style={{ fontSize: '20px' }}>Transaksi</h1>
           <p style={{ fontSize: '12px' }}>Pilih menu untuk memulai pesanan</p>
         </div>
       </div>
@@ -170,13 +171,13 @@ export default function TransaksiPage() {
         {/* Menu Grid Column */}
         <div>
           <div className="btn-group" style={{ marginBottom: '12px' }}>
-            <button className={`btn ${filter === 'Makanan' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('Makanan')}>🍔 Makanan</button>
-            <button className={`btn ${filter === 'Minuman' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('Minuman')}>🥤 Minuman</button>
-            <button className={`btn ${filter === 'Snack' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('Snack')}>🍟 Snack</button>
+            <button className={`btn ${filter === 'Makanan' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('Makanan')}><Icon name="burger" /> Makanan</button>
+            <button className={`btn ${filter === 'Minuman' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('Minuman')}><Icon name="cup" /> Minuman</button>
+            <button className={`btn ${filter === 'Snack' ? 'btn-primary' : 'btn-secondary'} btn-sm`} onClick={() => setFilter('Snack')}><Icon name="fries" /> Snack</button>
           </div>
 
           {loading ? (
-            <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat menu...</p></div>
+            <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat menu...</p></div>
           ) : (
             <div className="pos-menu-grid" style={{ gap: '10px' }}>
               {filteredMenus.map((menu) => {
@@ -206,7 +207,7 @@ export default function TransaksiPage() {
                       </div>
                     ) : (
                       <div className="pos-menu-icon">
-                        {menu.category === 'Minuman' ? '🥤' : menu.category === 'Snack' ? '🍟' : '🍔'}
+                        <Icon name={menu.category === 'Minuman' ? 'cup' : menu.category === 'Snack' ? 'fries' : 'burger'} />
                       </div>
                     )}
                     <div className="pos-menu-name">{menu.name}</div>
@@ -221,7 +222,7 @@ export default function TransaksiPage() {
         {/* Step 1: Cart / Pesanan Panel for Desktop & Tablet (>= 768px) */}
         <div className="pos-cart pos-cart-desktop hide-mobile">
           <div className="pos-cart-header" style={{ padding: '12px 16px' }}>
-            <h3 style={{ fontSize: '15px' }}>🧾 Pesanan</h3>
+            <h3 style={{ fontSize: '15px' }}><Icon name="receipt" /> Pesanan</h3>
             {cart.length > 0 && (
               <button className="btn btn-danger btn-sm" onClick={() => setCart([])} style={{ fontSize: '11px', padding: '4px 8px' }}>
                 Hapus Semua
@@ -232,7 +233,7 @@ export default function TransaksiPage() {
           <div className="pos-cart-items" style={{ padding: '12px' }}>
             {cart.length === 0 ? (
               <div className="pos-cart-empty">
-                <div className="pos-cart-empty-icon">🛒</div>
+                <div className="pos-cart-empty-icon"><Icon name="cart" /></div>
                 <p>Belum ada pesanan</p>
                 <p style={{ fontSize: '12px', marginTop: '4px' }}>Klik menu untuk menambahkan</p>
               </div>
@@ -265,7 +266,7 @@ export default function TransaksiPage() {
                 </span>
               </div>
               <button className="btn btn-primary w-full" onClick={() => setShowConfirm(true)} disabled={cart.length === 0}>
-                💳 Bayar
+                <Icon name="card" /> Bayar
               </button>
             </div>
           )}
@@ -340,11 +341,11 @@ export default function TransaksiPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {bt?.connected && (
                     <button className="btn btn-secondary w-full" onClick={handlePrintReceipt}>
-                      🖨️ Cetak Struk
+                      <Icon name="printer" /> Cetak Struk
                     </button>
                   )}
                   <button className="btn btn-primary w-full" onClick={handleNewTransaction} style={{ padding: '12px', fontSize: '15px' }}>
-                    ➕ Transaksi Baru
+                    <Icon name="plus" /> Transaksi Baru
                   </button>
                 </div>
               </div>
@@ -383,7 +384,7 @@ export default function TransaksiPage() {
                     />
                     {discount > totalPrice && (
                       <small style={{ color: 'var(--danger)', fontSize: '11px' }}>
-                        ⚠️ Diskon melebihi subtotal, di-cap ke {formatCurrency(totalPrice)}
+                        <Icon name="alert" /> Diskon melebihi subtotal, di-cap ke {formatCurrency(totalPrice)}
                       </small>
                     )}
                   </div>
@@ -403,7 +404,7 @@ export default function TransaksiPage() {
                           }}
                           style={{ flex: '1 1 45%', padding: '8px 12px', fontSize: '13px' }}
                         >
-                          {m === 'Cash' ? '💵 Cash' : m === 'QRIS' ? '📱 QRIS' : m === 'Grab' ? '🟢 Grab' : '🟠 GoFood'}
+                          <Icon name={m === 'Cash' ? 'banknote' : m === 'QRIS' ? 'phone' : 'bike'} /> {m}
                         </button>
                       ))}
                     </div>
@@ -463,7 +464,7 @@ export default function TransaksiPage() {
                 <div className="modal-footer">
                   <button className="btn btn-secondary" onClick={() => setShowConfirm(false)} disabled={submitting}>Batal</button>
                   <button className="btn btn-primary" onClick={handleSubmit} disabled={!canConfirm}>
-                    {submitting ? '⏳ Memproses...' : '✅ Konfirmasi & Bayar'}
+                    {submitting ? 'Memproses...' : 'Konfirmasi & Bayar'}
                   </button>
                 </div>
               </>

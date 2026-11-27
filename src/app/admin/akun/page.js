@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
+import Icon from '@/components/Icon';
 
 export default function AkunPage() {
   const toast = useToast();
@@ -103,17 +104,17 @@ export default function AkunPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>👤 Manajemen Akun</h1>
+          <h1>Manajemen Akun</h1>
           <p>Kelola akun pengguna sistem</p>
         </div>
         <div className="navbar-right">
-          <button className="btn btn-primary hide-mobile" onClick={openAdd}>➕ Tambah Akun Kasir</button>
+          <button className="btn btn-primary hide-mobile" onClick={openAdd}><Icon name="plus" /> Tambah Akun Kasir</button>
         </div>
       </div>
 
       <div className="card">
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
         ) : (
           <>
             {/* Desktop / Tablet Table View (>= 768px) */}
@@ -133,10 +134,10 @@ export default function AkunPage() {
                       </td>
                       <td>
                         <div className="btn-group">
-                          <button className="btn btn-secondary btn-sm icon-btn" onClick={() => openEdit(u)} title="Edit Akun">✏️</button>
-                          <button className="btn btn-secondary btn-sm icon-btn" onClick={() => openResetPasswordModal(u)} title="Reset Password">🔑</button>
+                          <button className="btn btn-secondary btn-sm icon-btn" onClick={() => openEdit(u)} title="Edit Akun"><Icon name="pencil" /></button>
+                          <button className="btn btn-secondary btn-sm icon-btn" onClick={() => openResetPasswordModal(u)} title="Reset Password"><Icon name="key" /></button>
                           {u.role !== 'ADMIN' && (
-                            <button className="btn btn-danger btn-sm icon-btn" onClick={() => handleDelete(u.id)} title="Hapus Akun">🗑️</button>
+                            <button className="btn btn-danger btn-sm icon-btn" onClick={() => handleDelete(u.id)} title="Hapus Akun"><Icon name="trash" /></button>
                           )}
                         </div>
                       </td>
@@ -207,7 +208,7 @@ export default function AkunPage() {
                 openEdit(u);
               }}
             >
-              ✏️ <span>Edit Data</span>
+              <Icon name="pencil" /> <span>Edit Data</span>
             </button>
 
             <button
@@ -219,7 +220,7 @@ export default function AkunPage() {
                 openResetPasswordModal(u);
               }}
             >
-              🔑 <span>Reset Password</span>
+              <Icon name="key" /> <span>Reset Password</span>
             </button>
 
             <button
@@ -231,7 +232,7 @@ export default function AkunPage() {
                 handleDelete(uid);
               }}
             >
-              🗑️ <span>Hapus Akun</span>
+              <Icon name="trash" /> <span>Hapus Akun</span>
             </button>
           </div>
         </Modal>

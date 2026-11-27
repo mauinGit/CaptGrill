@@ -1,5 +1,5 @@
 /**
- * Logic keranjang (cart) POS Kasir — Halaman Transaksi & Konfirmasi Pembayaran.
+ * Logic keranjang (cart) POS Kasir - Halaman Transaksi & Konfirmasi Pembayaran.
  * - Total keranjang, diskon (clamped di 0, tidak boleh negatif), dan kembalian.
  */
 

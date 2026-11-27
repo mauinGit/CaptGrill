@@ -1,5 +1,5 @@
 /**
- * Section 5.2 — Logic Status Stok Bahan
+ * Section 5.2 - Logic Status Stok Bahan
  * Aman   : stok > stokMinimum
  * Menipis: 0 < stok <= stokMinimum
  * Habis  : stok === 0

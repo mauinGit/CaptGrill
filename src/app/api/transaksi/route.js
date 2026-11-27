@@ -97,7 +97,7 @@ export async function POST(request) {
       });
     }
 
-    // --- Validasi stok SEBELUM memproses (Section 4 — atomic validation) ---
+    // --- Validasi stok SEBELUM memproses (Section 4 - atomic validation) ---
     // Build menuCompositions map: menuId -> [{bahanId, jumlah}]
     const menuCompositions = {};
     const currentStock = {};
@@ -187,7 +187,7 @@ export async function POST(request) {
         },
       });
 
-      // Reduce ingredient stock (validated above — stock is sufficient)
+      // Reduce ingredient stock (validated above - stock is sufficient)
       for (const item of itemDetails) {
         for (const mi of item.menuIngredients) {
           await tx.ingredient.update({

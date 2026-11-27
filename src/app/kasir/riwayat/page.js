@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import Modal from '@/components/Modal';
+import Icon from '@/components/Icon';
 
 // Shift time helper: Shift 1 = 06:00-15:00, Shift 2 = 15:00-06:00
 function getTransactionShift(createdAt) {
@@ -47,7 +48,7 @@ export default function RiwayatPage() {
     <div className="animate-fade-in">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>📜 Riwayat Transaksi Hari Ini</h1>
+          <h1>Riwayat Transaksi Hari Ini</h1>
           <p>{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}</p>
         </div>
       </div>
@@ -56,14 +57,14 @@ export default function RiwayatPage() {
         <>
           <div className="summary-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
             <div className="summary-card">
-              <div className="summary-card-icon orange hide-mobile">🛒</div>
+              <div className="summary-card-icon orange hide-mobile"><Icon name="cart" /></div>
               <div className="summary-card-info">
                 <h3>Total Transaksi</h3>
                 <div className="value">{filteredTransactions.length}</div>
               </div>
             </div>
             <div className="summary-card">
-              <div className="summary-card-icon green hide-mobile">💰</div>
+              <div className="summary-card-icon green hide-mobile"><Icon name="coins" /></div>
               <div className="summary-card-info">
                 <h3>Total Pendapatan</h3>
                 <div className="value">{formatCurrency(totalToday)}</div>
@@ -100,9 +101,9 @@ export default function RiwayatPage() {
         </div>
 
         {loading ? (
-          <div className="empty-state"><div className="empty-state-icon">⏳</div><p>Memuat...</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="loader" /></div><p>Memuat...</p></div>
         ) : filteredTransactions.length === 0 ? (
-          <div className="empty-state"><div className="empty-state-icon">📭</div><p>Belum ada transaksi {shiftFilter !== 'Semua' ? `untuk ${shiftFilter}` : 'hari ini'}</p></div>
+          <div className="empty-state"><div className="empty-state-icon"><Icon name="inbox" /></div><p>Belum ada transaksi {shiftFilter !== 'Semua' ? `untuk ${shiftFilter}` : 'hari ini'}</p></div>
         ) : (
           <div className="table-container">
             <table>
@@ -143,7 +144,7 @@ export default function RiwayatPage() {
                           onClick={() => setDetailModalItem(t)}
                           style={{ padding: '4px 10px', fontSize: '12px' }}
                         >
-                          🔍 Detail
+                          <Icon name="search" /> Detail
                         </button>
                       </td>
                     </tr>
@@ -179,8 +180,8 @@ export default function RiwayatPage() {
               padding: '10px 14px',
               borderRadius: 'var(--radius-md)',
             }}>
-              <div>👤 Kasir: <strong>{detailModalItem.user?.name || '-'}</strong></div>
-              <div>💳 Metode: <strong>{detailModalItem.paymentMethod || 'Cash'}</strong> | ⏱️ Shift: <strong>{getTransactionShift(detailModalItem.createdAt)}</strong></div>
+              <div><Icon name="user" /> Kasir: <strong>{detailModalItem.user?.name || '-'}</strong></div>
+              <div><Icon name="card" /> Metode: <strong>{detailModalItem.paymentMethod || 'Cash'}</strong> | Shift: <strong>{getTransactionShift(detailModalItem.createdAt)}</strong></div>
             </div>
 
             <div style={{ marginTop: '4px' }}>
@@ -190,7 +191,7 @@ export default function RiwayatPage() {
                   <thead>
                     <tr>
                       <th>Item Menu</th>
-                      <th style={{ textAlign: 'center' }}>Qty</th>
+                      <th style={{ textAlign: 'center' }}>Jumlah</th>
                       <th style={{ textAlign: 'right' }}>Harga</th>
                       <th style={{ textAlign: 'right' }}>Subtotal</th>
                     </tr>

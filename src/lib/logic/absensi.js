@@ -1,5 +1,5 @@
 /**
- * Section 18.3 & 18.5 — Validasi Absensi Kasir
+ * Section 18.3 & 18.5 - Validasi Absensi Kasir
  * - Lokasi valid jika jarak ke resto <= 100 meter (radius tetap).
  * - Satu Tujuan (Shift 1 / Shift 2 / Buat Bahan) hanya boleh dikirim 1x per hari.
  */

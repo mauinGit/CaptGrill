@@ -1,4 +1,4 @@
-/* ===== LOGIN — CaptGrill =====
+/* ===== LOGIN - CaptGrill =====
    Warna sengaja ditulis tetap (tidak ikut data-theme) supaya halaman login
    selalu tampil sesuai brand, termasuk setelah logout dari mode gelap. */
 
@@ -45,7 +45,7 @@
     linear-gradient(165deg, var(--g800) 0%, var(--g900) 60%, var(--g950) 100%);
 }
 
-/* Garis diagonal halus — seperti bekas panggangan */
+/* Garis diagonal halus - seperti bekas panggangan */
 .brand::before {
   content: "";
   position: absolute;
@@ -126,7 +126,7 @@
   animation: floatIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Blok kuning di belakang foto — menggemakan warna logo */
+/* Blok kuning di belakang foto - menggemakan warna logo */
 .photoFrame::before {
   content: "";
   position: absolute;
@@ -575,7 +575,7 @@
   }
 }
 
-@media (max-width: 340px) {
+@media (max-width: 479px) {
   .clock span:first-of-type,
   .clockSep {
     display: none;
