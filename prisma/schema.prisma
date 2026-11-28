@@ -52,6 +52,8 @@ model Ingredient {
   stock     Decimal    @default(0)
   minStock  Decimal    @default(0)
   category  String?  @db.VarChar(50)
+  // Urutan tampil dalam kategorinya (diatur admin lewat "Atur Urutan")
+  sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

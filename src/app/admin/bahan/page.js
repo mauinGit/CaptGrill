@@ -4,6 +4,7 @@ import { useEffect, useState, Fragment } from 'react';
 import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
 import Icon from '@/components/Icon';
+import UrutanBahanPanel from './UrutanBahanPanel';
 
 const UNITS = ['pcs', 'gram', 'kg', 'ml', 'liter', 'butir', 'lembar', 'sachet'];
 
@@ -39,6 +40,7 @@ export default function BahanPage() {
   const [editModal, setEditModal] = useState(false);
   const [restockModal, setRestockModal] = useState(false);
   const [copyModal, setCopyModal] = useState(false);
+  const [orderOpen, setOrderOpen] = useState(false);
   const [actionSheetItem, setActionSheetItem] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -291,6 +293,7 @@ export default function BahanPage() {
           </div>
         </div>
         <div className="toolbar-right">
+          <button className="btn btn-secondary" onClick={() => setOrderOpen(true)}><Icon name="sort" /> Atur Urutan</button>
           <button className="btn btn-secondary" onClick={openCopyModal}><Icon name="clipboard" /> Salin Catatan</button>
           <button className="btn btn-primary hide-mobile" onClick={openAdd}><Icon name="plus" /> Tambah Bahan</button>
         </div>
@@ -714,6 +717,13 @@ export default function BahanPage() {
             <button className="btn btn-primary" onClick={handleCopy}><Icon name="clipboard" /> Salin ke Clipboard</button>
           </div>
         </Modal>
+      )}
+      {orderOpen && (
+        <UrutanBahanPanel
+          toast={toast}
+          onClose={() => setOrderOpen(false)}
+          onSaved={() => { setOrderOpen(false); fetchData(); }}
+        />
       )}
     </div>
   );

@@ -18,15 +18,16 @@ export async function GET(request) {
       where: search ? {
         name: { contains: search },
       } : undefined,
-      orderBy: { name: 'asc' },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     });
 
-    // Sort by category order, then alphabetically within each category
+    // Urut per kategori, lalu sesuai urutan yang diatur admin (sortOrder), lalu abjad
     if (sort === 'kategori') {
       ingredients.sort((a, b) => {
         const catA = CATEGORY_ORDER[a.category] || 99;
         const catB = CATEGORY_ORDER[b.category] || 99;
         if (catA !== catB) return catA - catB;
+        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
         return a.name.localeCompare(b.name);
       });
     }
@@ -54,8 +55,12 @@ export async function POST(request) {
       return apiError(`Bahan dengan nama "${name}" sudah ada`, 400);
     }
 
+    // Bahan baru diletakkan di urutan paling akhir
+    const last = await prisma.ingredient.aggregate({ _max: { sortOrder: true } });
+
     const ingredient = await prisma.ingredient.create({
       data: {
+        sortOrder: (last._max.sortOrder ?? 0) + 1,
         name,
         unit,
         stock: parseFloat(stock) || 0,
