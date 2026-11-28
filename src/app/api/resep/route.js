@@ -34,10 +34,15 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, ingredientId, compositions } = body;
+    const { name, ingredientId, compositions, outputQuantity } = body;
+    const output = outputQuantity === undefined || outputQuantity === '' ? 1 : parseFloat(outputQuantity);
 
     if (!name || !ingredientId) {
       return apiError('Nama bahan dan bahan hasil harus diisi', 400);
+    }
+
+    if (!Number.isFinite(output) || output <= 0) {
+      return apiError('Hasil per 1x produksi harus lebih dari 0', 400);
     }
 
     if (!compositions || compositions.length === 0) {
@@ -54,6 +59,7 @@ export async function POST(request) {
       data: {
         name,
         ingredientId: parseInt(ingredientId),
+        outputQuantity: output,
         compositions: {
           create: compositions
             .filter((c) => c.ingredientId && c.quantity)

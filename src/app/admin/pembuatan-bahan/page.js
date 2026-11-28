@@ -5,6 +5,9 @@ import { useToast } from '@/components/Toast';
 import Modal from '@/components/Modal';
 import Icon from '@/components/Icon';
 
+// Tampilkan angka desimal dari database (contoh "60.000") sebagai "60"
+const formatQty = (v) => Number(v ?? 0).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+
 export default function PembuatanBahanPage() {
   const toast = useToast();
   const [recipes, setRecipes] = useState([]);
@@ -13,7 +16,7 @@ export default function PembuatanBahanPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ name: '', ingredientId: '', compositions: [] });
+  const [form, setForm] = useState({ name: '', ingredientId: '', outputQuantity: '1', compositions: [] });
 
   const fetchData = async () => {
     const [recipeRes, ingRes] = await Promise.all([
@@ -29,7 +32,7 @@ export default function PembuatanBahanPage() {
 
   const openAdd = () => {
     setEditItem(null);
-    setForm({ name: '', ingredientId: '', compositions: [] });
+    setForm({ name: '', ingredientId: '', outputQuantity: '1', compositions: [] });
     setModalOpen(true);
   };
 
@@ -38,6 +41,7 @@ export default function PembuatanBahanPage() {
     setForm({
       name: item.name,
       ingredientId: item.ingredientId.toString(),
+      outputQuantity: String(Number(item.outputQuantity ?? 1)),
       compositions: item.compositions?.map((c) => ({
         ingredientId: c.ingredientId.toString(),
         quantity: c.quantity.toString(),
@@ -72,6 +76,7 @@ export default function PembuatanBahanPage() {
     const payload = {
       name: form.name,
       ingredientId: form.ingredientId,
+      outputQuantity: form.outputQuantity,
       compositions: form.compositions.filter((c) => c.ingredientId && c.quantity),
     };
 
@@ -156,9 +161,31 @@ export default function PembuatanBahanPage() {
         </small>
       </div>
 
+      <div className="form-group">
+        <label className="form-label">Hasil per 1x Produksi *</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <input
+            type="number"
+            min="0.01"
+            step="any"
+            className="form-input"
+            value={form.outputQuantity}
+            onChange={(e) => setForm({ ...form, outputQuantity: e.target.value })}
+            required
+            style={{ maxWidth: '160px' }}
+          />
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            {ingredients.find((i) => i.id.toString() === form.ingredientId)?.unit || 'satuan bahan hasil'}
+          </span>
+        </div>
+        <small style={{ color: 'var(--text-tertiary)', fontSize: '11px', marginTop: '4px', display: 'block' }}>
+          Berapa banyak bahan hasil yang bertambah setiap 1x produksi. Contoh: 1x masak saus burger cukup untuk 60 porsi, isi 60.
+        </small>
+      </div>
+
       <div style={{ marginTop: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <label className="form-label" style={{ margin: 0 }}>Komposisi Bahan Dasar</label>
+          <label className="form-label" style={{ margin: 0 }}>Komposisi Bahan Dasar (untuk 1x produksi)</label>
           <button type="button" className="btn btn-secondary btn-sm" onClick={addComposition}><Icon name="plus" /> Tambah Bahan</button>
         </div>
         {form.compositions.length === 0 && (
@@ -211,7 +238,7 @@ export default function PembuatanBahanPage() {
                 onClick={() => removeComposition(index)}
                 title="Hapus bahan dasar"
               >
-                ✕
+                <Icon name="close" />
               </button>
             </div>
           );
@@ -263,6 +290,7 @@ export default function PembuatanBahanPage() {
                   <th>No</th>
                   <th>Nama Resep</th>
                   <th>Bahan Hasil</th>
+                  <th>Hasil per Produksi</th>
                   <th>Komposisi Bahan Dasar</th>
                   <th>Aksi</th>
                 </tr>
@@ -277,10 +305,13 @@ export default function PembuatanBahanPage() {
                         {item.ingredient?.name} ({item.ingredient?.unit})
                       </span>
                     </td>
+                    <td style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      {formatQty(item.outputQuantity ?? 1)} {item.ingredient?.unit}
+                    </td>
                     <td style={{ fontSize: '12px', maxWidth: '300px' }}>
                       {item.compositions?.map((c) => (
                         <span key={c.id} style={{ display: 'inline-block', background: 'var(--bg-tertiary)', padding: '2px 8px', borderRadius: '4px', margin: '2px', fontSize: '11px' }}>
-                          {c.ingredient?.name}: {c.quantity} {c.ingredient?.unit}
+                          {c.ingredient?.name}: {formatQty(c.quantity)} {c.ingredient?.unit}
                         </span>
                       ))}
                     </td>
@@ -318,13 +349,13 @@ export default function PembuatanBahanPage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
                     {item.compositions?.map((c) => (
                       <span key={c.id} style={{ background: 'var(--bg-tertiary)', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-                        {c.ingredient?.name}: {c.quantity} {c.ingredient?.unit}
+                        {c.ingredient?.name}: {formatQty(c.quantity)} {c.ingredient?.unit}
                       </span>
                     ))}
                   </div>
                 </div>
                 <div className="mobile-card-footer">
-                  <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Hasil: {item.ingredient?.unit}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Hasil per produksi: <strong>{formatQty(item.outputQuantity ?? 1)} {item.ingredient?.unit}</strong></span>
                   <div className="btn-group">
                     <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}><Icon name="pencil" /> Edit</button>
                     <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}><Icon name="trash" /> Hapus</button>

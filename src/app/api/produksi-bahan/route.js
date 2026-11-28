@@ -109,7 +109,10 @@ export async function POST(request) {
     const deductions = recipe.compositions.map(
       (c) => `${c.ingredient.name}: -${c.quantity * parsedQty} ${c.ingredient.unit}`
     );
-    const outputDetail = `${recipe.ingredient.name}: +${parsedQty} ${recipe.ingredient.unit}`;
+    // Hasil per 1x produksi (contoh: 1x masak saus = 60 porsi), default 1
+    const perBatch = Number(recipe.outputQuantity) > 0 ? Number(recipe.outputQuantity) : 1;
+    const totalOutput = perBatch * parsedQty;
+    const outputDetail = `${recipe.ingredient.name}: +${totalOutput} ${recipe.ingredient.unit}`;
     const detailStr = `Produksi ${recipe.name} x${parsedQty}\nBahan terpakai: ${deductions.join(', ')}\nHasil: ${outputDetail}`;
 
     // Use transaction for atomicity
@@ -128,7 +131,7 @@ export async function POST(request) {
       await tx.ingredient.update({
         where: { id: recipe.ingredientId },
         data: {
-          stock: { increment: parsedQty },
+          stock: { increment: totalOutput },
         },
       });
 

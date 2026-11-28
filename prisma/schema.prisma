@@ -193,6 +193,8 @@ model Recipe {
   id          Int      @id @default(autoincrement())
   name        String   @db.VarChar(100)
   ingredientId Int
+  // Jumlah bahan hasil yang bertambah setiap 1x produksi (contoh: 1x masak saus = 60 porsi)
+  outputQuantity Decimal @default(1)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

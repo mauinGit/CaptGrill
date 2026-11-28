@@ -6,7 +6,15 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, ingredientId, compositions } = body;
+    const { name, ingredientId, compositions, outputQuantity } = body;
+
+    let output;
+    if (outputQuantity !== undefined && outputQuantity !== '') {
+      output = parseFloat(outputQuantity);
+      if (!Number.isFinite(output) || output <= 0) {
+        return apiError('Hasil per 1x produksi harus lebih dari 0', 400);
+      }
+    }
 
     // Delete old compositions and recreate
     await prisma.recipeComposition.deleteMany({
@@ -18,6 +26,7 @@ export async function PUT(request, { params }) {
       data: {
         ...(name && { name }),
         ...(ingredientId && { ingredientId: parseInt(ingredientId) }),
+        ...(output !== undefined && { outputQuantity: output }),
         compositions: {
           create: (compositions || [])
             .filter((c) => c.ingredientId && c.quantity)
