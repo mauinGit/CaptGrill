@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/components/Toast';
 import Icon from '@/components/Icon';
 
+// Angka desimal dari database (contoh "60.000") ditampilkan sebagai "60"
+const formatQty = (v) => Number(v ?? 0).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+// Hasil per 1x produksi yang diatur admin di Pembuatan Bahan (default 1)
+const perBatch = (recipe) => (Number(recipe?.outputQuantity) > 0 ? Number(recipe.outputQuantity) : 1);
+
 export default function BahanKasirPage() {
   const toast = useToast();
   const [recipes, setRecipes] = useState([]);
@@ -53,7 +58,7 @@ export default function BahanKasirPage() {
       });
 
       if (res.ok) {
-        toast.success(`Berhasil memproduksi ${selectedRecipe.name} x${quantity}!`);
+        toast.success(`Produksi ${selectedRecipe.name} ${quantity}x berhasil. Stok ${selectedRecipe.ingredient?.name} bertambah ${formatQty(perBatch(selectedRecipe) * quantity)} ${selectedRecipe.ingredient?.unit || ''}`);
         setShowConfirm(false);
         setSelectedRecipe(null);
         setQuantity(1);
@@ -145,14 +150,14 @@ export default function BahanKasirPage() {
                   </div>
                   <div style={{ textAlign: 'center', marginBottom: '8px' }}>
                     <span className="badge badge-success" style={{ fontSize: '11px' }}>
-                      → {recipe.ingredient?.name}
+                      <Icon name="arrow-up" /> {formatQty(perBatch(recipe))} {recipe.ingredient?.unit} {recipe.ingredient?.name}
                     </span>
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
                     {recipe.compositions?.map((c) => (
                       <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
                         <span>{c.ingredient?.name}</span>
-                        <span>{c.quantity} {c.ingredient?.unit}</span>
+                        <span>{formatQty(c.quantity)} {c.ingredient?.unit}</span>
                       </div>
                     ))}
                   </div>
@@ -238,29 +243,29 @@ export default function BahanKasirPage() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2><Icon name="flask" /> Konfirmasi Produksi</h2>
-              <button className="modal-close" onClick={() => setShowConfirm(false)}>✕</button>
+              <button className="modal-close" onClick={() => setShowConfirm(false)} aria-label="Tutup"><Icon name="close" /></button>
             </div>
             <div className="modal-body">
               <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '40px', marginBottom: '8px' }}><Icon name="flask" /></div>
                 <h3 style={{ fontSize: '18px', fontWeight: '700' }}>{selectedRecipe.name}</h3>
-                <span className="badge badge-success" style={{ marginTop: '8px', display: 'inline-block' }}>
-                  → {selectedRecipe.ingredient?.name}
+                <span className="badge badge-success" style={{ marginTop: '8px' }}>
+                  1x produksi menghasilkan {formatQty(perBatch(selectedRecipe))} {selectedRecipe.ingredient?.unit} {selectedRecipe.ingredient?.name}
                 </span>
               </div>
 
               {/* Composition detail */}
               <div style={{ background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: '16px' }}>
-                <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}><Icon name="box" /> Bahan yang digunakan per produksi:</p>
+                <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}><Icon name="box" /> Bahan yang digunakan untuk 1x produksi:</p>
                 {selectedRecipe.compositions?.map((c) => (
                   <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '13px', borderBottom: '1px solid var(--border-light)' }}>
                     <span>{c.ingredient?.name}</span>
-                    <span style={{ fontWeight: '600' }}>-{c.quantity} {c.ingredient?.unit}</span>
+                    <span style={{ fontWeight: '600' }}>-{formatQty(c.quantity)} {c.ingredient?.unit}</span>
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', fontSize: '13px', fontWeight: '700', color: 'var(--success)' }}>
                   <span>Hasil: {selectedRecipe.ingredient?.name}</span>
-                  <span>+1 {selectedRecipe.ingredient?.unit}</span>
+                  <span>+{formatQty(perBatch(selectedRecipe))} {selectedRecipe.ingredient?.unit}</span>
                 </div>
               </div>
 
@@ -281,16 +286,16 @@ export default function BahanKasirPage() {
               {/* Summary */}
               {quantity > 0 && (
                 <div style={{ background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', padding: '16px' }}>
-                  <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}><Icon name="bar-chart" /> Ringkasan (x{quantity}):</p>
+                  <p style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}><Icon name="bar-chart" /> Ringkasan untuk {quantity}x produksi:</p>
                   {selectedRecipe.compositions?.map((c) => (
                     <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: '13px' }}>
                       <span style={{ color: 'var(--danger)' }}><Icon name="arrow-down" /> {c.ingredient?.name}</span>
-                      <span style={{ fontWeight: '600', color: 'var(--danger)' }}>-{c.quantity * quantity} {c.ingredient?.unit}</span>
+                      <span style={{ fontWeight: '600', color: 'var(--danger)' }}>-{formatQty(Number(c.quantity) * quantity)} {c.ingredient?.unit}</span>
                     </div>
                   ))}
                   <div style={{ borderTop: '2px solid var(--border)', paddingTop: '8px', marginTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '700', color: 'var(--success)' }}>
                     <span><Icon name="arrow-up" /> {selectedRecipe.ingredient?.name}</span>
-                    <span>+{quantity} {selectedRecipe.ingredient?.unit}</span>
+                    <span>+{formatQty(perBatch(selectedRecipe) * quantity)} {selectedRecipe.ingredient?.unit}</span>
                   </div>
                 </div>
               )}
